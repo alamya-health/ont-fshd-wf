@@ -59,7 +59,8 @@
         "t2t_ref_fasta": {
           "type": "string",
           "format": "path",
-          "description": "T2T-CHM13v2.0 FASTA used for alignment and methylation."
+          "description": "T2T-CHM13v2.0 FASTA used for alignment and methylation.",
+          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/t2t/chm13/chm13v2.0.fa"
         },
         "blast_db_dir": {
           "type": "string",
@@ -110,27 +111,32 @@
         "hg38_ref_fasta": {
           "type": "string",
           "format": "path",
-          "description": "HG38 no-alt reference FASTA for variant calling."
+          "description": "HG38 no-alt reference FASTA for variant calling.",
+          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/hg38/hg38_no_alt.fa"
         },
         "clair3_model_tgz": {
           "type": "string",
           "format": "path",
-          "description": "Tarball containing the Clair3 ONT model directory."
+          "description": "Tarball containing the Clair3 ONT model directory.",
+          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/clair3/r1041_e82_400bps_sup_v500.tar.gz"
         },
         "clinvar_vcf_gz": {
           "type": "string",
           "format": "path",
-          "description": "ClinVar VCF.gz used for annotation."
+          "description": "ClinVar VCF.gz used for annotation.",
+          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/clinvar/clinvar.vcf.gz"
         },
         "clinvar_vcf_tbi": {
           "type": "string",
           "format": "path",
-          "description": "Tabix index for the ClinVar VCF.gz."
+          "description": "Tabix index for the ClinVar VCF.gz.",
+          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/clinvar/clinvar.vcf.gz.tbi"
         },
         "snpeff_data_tgz": {
           "type": "string",
           "format": "path",
-          "description": "Tarball containing snpEff data with a hg38 database under data/hg38."
+          "description": "Tarball containing snpEff data with a hg38 database under data/hg38.",
+          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/snpeff/snpeff_hg38_data.tgz"
         }
       }
     },

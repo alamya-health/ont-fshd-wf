@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-AWS_REGION_DEFAULT="us-west-1"
+AWS_ACCOUNT_ID_DEFAULT="160433694210"
+AWS_REGION_DEFAULT="ap-southeast-1"
 PIPELINE_REPO_DEFAULT="ont-fshd-wf"
 
-ACCOUNT_ID=""
+ACCOUNT_ID="${AWS_ACCOUNT_ID:-$AWS_ACCOUNT_ID_DEFAULT}"
 REGION="${AWS_REGION:-$AWS_REGION_DEFAULT}"
 TAG="${TAG:-$(date +%Y%m%d)-$(git rev-parse --short HEAD 2>/dev/null || echo local)}"
 PIPELINE_REPO="${PIPELINE_REPO:-$PIPELINE_REPO_DEFAULT}"
@@ -19,10 +20,10 @@ BUILD_ARGS=()
 usage() {
   cat <<USAGE
 Usage:
-  $0 --account-id 123456789012 [options]
+  $0 [options]
 
 Options:
-  --account-id <ID>      Required AWS account ID
+  --account-id <ID>      AWS account ID (default: ${AWS_ACCOUNT_ID_DEFAULT})
   --region <REGION>      AWS region (default: ${AWS_REGION_DEFAULT})
   --tag <TAG>            Image tag suffix (default: auto)
   --repo <NAME>          ECR repository name (default: ${PIPELINE_REPO_DEFAULT})
@@ -56,11 +57,6 @@ done
 
 command -v aws >/dev/null || { echo "ERROR: aws CLI not found"; exit 1; }
 command -v docker >/dev/null || { echo "ERROR: docker not found"; exit 1; }
-
-if [[ -z "$ACCOUNT_ID" ]]; then
-  echo "ERROR: --account-id is required."
-  usage 1
-fi
 
 if [[ $PLATFORM_AUTO -eq 1 ]]; then
   case "$(uname -m || echo unknown)" in
