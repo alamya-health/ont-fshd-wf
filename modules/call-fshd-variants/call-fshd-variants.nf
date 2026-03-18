@@ -1,0 +1,196 @@
+#!/usr/bin/env nextflow
+
+process CALL_FSHD_VARIANTS {
+
+  tag "${sample_id}"
+
+  publishDir "${params.output_dir}/call-fshd-variants/${sample_id}", mode: 'copy', overwrite: true
+
+  input:
+    tuple val(sample_id), path(hg38_bam), path(hg38_bai), path(t2t_bam), path(t2t_bai)
+    path hg38_ref_fasta
+    path clair3_model_tgz
+    path clinvar_vcf_gz
+    path clinvar_vcf_tbi
+    path snpeff_data_tgz
+
+  output:
+    tuple val(sample_id), path("${sample_id}.variant-calling")
+    tuple val(sample_id), path("${sample_id}.variant.summary.tsv")
+
+  script:
+    """
+    set -euo pipefail
+
+    if [[ ! -f "${hg38_bam}.bai" ]]; then
+      ln -sf "${hg38_bai}" "${hg38_bam}.bai"
+    fi
+    if [[ ! -f "${t2t_bam}.bai" ]]; then
+      ln -sf "${t2t_bai}" "${t2t_bam}.bai"
+    fi
+
+    outdir="${sample_id}.variant-calling"
+    mkdir -p "\${outdir}/clair3" "\${outdir}/refs" "\${outdir}/assets"
+
+    tar -xzf "${clair3_model_tgz}" -C "\${outdir}/assets"
+    model_dir="\$(find "\${outdir}/assets" -mindepth 1 -maxdepth 3 -type d | sort | head -n 1)"
+    if [[ -z "\${model_dir}" ]]; then
+      echo "Unable to find extracted Clair3 model directory" >&2
+      exit 1
+    fi
+
+    tar -xzf "${snpeff_data_tgz}" -C "\${outdir}/assets"
+    snpeff_data_root="\${outdir}/assets"
+    if [[ ! -d "\${snpeff_data_root}/data" ]]; then
+      candidate="\$(find "\${outdir}/assets" -mindepth 1 -maxdepth 3 -type d -name data | sort | head -n 1)"
+      if [[ -n "\${candidate}" ]]; then
+        snpeff_data_root="\$(dirname "\${candidate}")"
+      fi
+    fi
+    if [[ ! -d "\${snpeff_data_root}/data/hg38" ]]; then
+      echo "Unable to find snpEff hg38 database under extracted assets" >&2
+      exit 1
+    fi
+
+    cp "${clinvar_vcf_gz}" "\${outdir}/refs/clinvar.vcf.gz"
+    cp "${clinvar_vcf_tbi}" "\${outdir}/refs/clinvar.vcf.gz.tbi"
+
+    total_reads="\$(samtools view -c "${hg38_bam}")"
+    if [[ "\${total_reads}" -eq 0 ]]; then
+      {
+        printf "status\\ttotal_clair3_variants\\trelevant_variant_records\\tclinvar_fshd_hits\\thg38_sv_records\\tt2t_sv_records\\trelevant_genes\\n"
+        printf "empty_input\\t0\\t0\\t0\\t0\\t0\\tNA\\n"
+      } > "${sample_id}.variant.summary.tsv"
+      touch "\${outdir}/empty.txt"
+      exit 0
+    fi
+
+    run_clair3.sh \
+      --bam_fn="${hg38_bam}" \
+      --ref_fn="${hg38_ref_fasta}" \
+      --threads=${task.cpus} \
+      --platform=ont \
+      --model_path="\${model_dir}" \
+      --output="\${outdir}/clair3" \
+      --sample_name="${sample_id}" \
+      --enable_phasing \
+      --whatshap="\$(command -v whatshap)"
+
+    clair3_vcfgz=""
+    if [[ -f "\${outdir}/clair3/phased_merge_output.vcf.gz" ]]; then
+      clair3_vcfgz="\${outdir}/clair3/phased_merge_output.vcf.gz"
+    elif [[ -f "\${outdir}/clair3/merge_output.vcf.gz" ]]; then
+      clair3_vcfgz="\${outdir}/clair3/merge_output.vcf.gz"
+    else
+      echo "Clair3 did not produce a merged VCF" >&2
+      exit 1
+    fi
+
+    whatshap haplotag \
+      -o "\${outdir}/${sample_id}.hg38.haplotagged.bam" \
+      --reference "${hg38_ref_fasta}" \
+      "\${clair3_vcfgz}" \
+      "${hg38_bam}" \
+      --ignore-read-groups \
+      --output-haplotag-list "\${outdir}/${sample_id}.haplotag-list.tsv" \
+      --output-threads=${task.cpus}
+
+    samtools index -@ ${task.cpus} "\${outdir}/${sample_id}.hg38.haplotagged.bam"
+
+    whatshap stats \
+      --gtf="\${outdir}/${sample_id}.haploblocks.gtf" \
+      "\${clair3_vcfgz}" \
+      > "\${outdir}/${sample_id}.whatshap.stats.txt"
+
+    sniffles \
+      --input "\${outdir}/${sample_id}.hg38.haplotagged.bam" \
+      --vcf "\${outdir}/${sample_id}.hg38.sniffles2.phased.vcf" \
+      --phase \
+      --output-rnames
+
+    sniffles \
+      --input "${t2t_bam}" \
+      --vcf "\${outdir}/${sample_id}.t2t.sniffles2.vcf" \
+      --output-rnames
+
+    java -Xmx4g -jar /opt/snpeff/snpEff.jar \
+      -dataDir "\${snpeff_data_root}" \
+      hg38 \
+      -noStats \
+      -canon \
+      "\${clair3_vcfgz}" \
+      > "\${outdir}/${sample_id}.hg38.snpeff.vcf"
+
+    bgzip -f "\${outdir}/${sample_id}.hg38.snpeff.vcf"
+    tabix -f -p vcf "\${outdir}/${sample_id}.hg38.snpeff.vcf.gz"
+
+    java -Xmx2g -jar /opt/snpeff/SnpSift.jar \
+      annotate -v \
+      "\${outdir}/refs/clinvar.vcf.gz" \
+      "\${outdir}/${sample_id}.hg38.snpeff.vcf.gz" \
+      > "\${outdir}/${sample_id}.hg38.snpeff.clinvar.vcf"
+
+    bgzip -f "\${outdir}/${sample_id}.hg38.snpeff.clinvar.vcf"
+    tabix -f -p vcf "\${outdir}/${sample_id}.hg38.snpeff.clinvar.vcf.gz"
+
+    filter_expr="((ANN[*].GENE = 'DUX4') | (ANN[*].GENE = 'SMCHD1') | (ANN[*].GENE = 'LRIF1') | (ANN[*].GENE = 'DNMT3B') | (ANN[*].GENE = 'TRIM43') | (ANN[*].GENE = 'CAPN3') | (ANN[*].GENE = 'VCP') | (CLNDN =~ 'Facioscapulohumeral'))"
+
+    java -Xmx2g -jar /opt/snpeff/SnpSift.jar \
+      filter "\${filter_expr}" \
+      "\${outdir}/${sample_id}.hg38.snpeff.clinvar.vcf.gz" \
+      > "\${outdir}/${sample_id}.fshd_relevant.vcf"
+
+    bgzip -f "\${outdir}/${sample_id}.fshd_relevant.vcf"
+    tabix -f -p vcf "\${outdir}/${sample_id}.fshd_relevant.vcf.gz"
+
+    python3 - "${sample_id}" "\${clair3_vcfgz}" "\${outdir}/${sample_id}.fshd_relevant.vcf.gz" "\${outdir}/${sample_id}.hg38.sniffles2.phased.vcf" "\${outdir}/${sample_id}.t2t.sniffles2.vcf" "${sample_id}.variant.summary.tsv" <<'PY'
+import gzip
+import re
+import sys
+
+sample_id, clair3_vcf_gz, relevant_vcf_gz, hg38_sv_vcf, t2t_sv_vcf, summary_out = sys.argv[1:]
+
+def count_vcf_records(path):
+    opener = gzip.open if path.endswith(".gz") else open
+    count = 0
+    with opener(path, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            count += 1
+    return count
+
+def parse_relevant(path):
+    genes = set()
+    clinvar_hits = 0
+    records = 0
+    with gzip.open(path, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            records += 1
+            cols = line.rstrip("\\n").split("\\t")
+            if len(cols) < 8:
+                continue
+            info = cols[7]
+            if "CLNDN=" in info and "Facioscapulohumeral".lower() in info.lower():
+                clinvar_hits += 1
+            m = re.search(r"ANN=([^;]+)", info)
+            if m:
+                for ann in m.group(1).split(","):
+                    parts = ann.split("|")
+                    if len(parts) > 3 and parts[3]:
+                        genes.add(parts[3])
+    return records, clinvar_hits, ",".join(sorted(genes)) if genes else "NA"
+
+total_clair3 = count_vcf_records(clair3_vcf_gz)
+relevant_count, clinvar_hits, genes = parse_relevant(relevant_vcf_gz)
+hg38_sv_count = count_vcf_records(hg38_sv_vcf)
+t2t_sv_count = count_vcf_records(t2t_sv_vcf)
+
+with open(summary_out, "w", encoding="utf-8") as fh:
+    fh.write("status\\ttotal_clair3_variants\\trelevant_variant_records\\tclinvar_fshd_hits\\thg38_sv_records\\tt2t_sv_records\\trelevant_genes\\n")
+    fh.write(f"ready\\t{total_clair3}\\t{relevant_count}\\t{clinvar_hits}\\t{hg38_sv_count}\\t{t2t_sv_count}\\t{genes}\\n")
+PY
+    """
+}

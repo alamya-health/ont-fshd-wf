@@ -1,0 +1,13 @@
+merge-unaligned-bams=samtools-1.22.1
+align-reads-to-t2t=minimap2-2.28-samtools-1.22.1
+extract-fshd-locus=samtools-1.22.1
+align-reads-to-hg38=minimap2-2.28-samtools-1.22.1
+blast-fshd-reads=blast-2.14.0-samtools-1.22.1
+pas-check-fshd=python3.11-pysam
+classify-fshd-reads=r-4.3-dplyr-tidyr
+extract-classified-read-subsets=samtools-1.22.1
+summarize-haplotags=python3.11-pysam
+profile-fshd-methylation=modkit-0.6.1-minimap2-samtools
+call-fshd-variants=clair3-whatshap-sniffles-snpeff
+build-fshd-report=python3.11
+summarize-cohort=python3.11

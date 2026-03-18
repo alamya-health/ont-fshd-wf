@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://github.com/alamya-health/ont-fshd-wf/blob/main/nextflow_schema.json",
+  "title": "alamya-health/ont-fshd-wf",
+  "workflow_title": "ONT FSHD Profiler",
+  "description": "Tower-friendly modular Nextflow workflow for D4Z4 / DUX4 facioscapulohumeral dystrophy profiling from either aligned BAM input or a folder of unaligned BAMs.",
+  "url": "https://github.com/alamya-health/ont-fshd-wf",
+  "type": "object",
+  "definitions": {
+    "run_mode": {
+      "title": "Run Mode",
+      "type": "object",
+      "fa_icon": "fas fa-play-circle",
+      "properties": {
+        "samplesheet": {
+          "type": "string",
+          "format": "file-path",
+          "description": "CSV samplesheet path.",
+          "help_text": "Expected columns: sample_id,input_aligned_bam,input_aligned_bai,input_ubam_dir,reuse_input_t2t_alignment."
+        },
+        "sample_id": {
+          "type": "string",
+          "description": "Single-sample identifier when not using a samplesheet."
+        },
+        "reuse_input_t2t_alignment": {
+          "type": "boolean",
+          "default": false,
+          "description": "Reuse the provided aligned BAM directly if it is already T2T-aligned and indexed."
+        }
+      }
+    },
+    "inputs": {
+      "title": "Input Paths",
+      "type": "object",
+      "fa_icon": "fas fa-file-import",
+      "properties": {
+        "input_aligned_bam": {
+          "type": "string",
+          "format": "path",
+          "description": "Aligned BAM input."
+        },
+        "input_aligned_bai": {
+          "type": "string",
+          "format": "path",
+          "description": "BAM index for aligned BAM input."
+        },
+        "input_ubam_dir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Directory containing one or more unaligned BAM files."
+        }
+      }
+    },
+    "references": {
+      "title": "Reference Data",
+      "type": "object",
+      "fa_icon": "fas fa-dna",
+      "properties": {
+        "t2t_ref_fasta": {
+          "type": "string",
+          "format": "path",
+          "description": "T2T-CHM13v2.0 FASTA used for alignment and methylation."
+        },
+        "blast_db_dir": {
+          "type": "string",
+          "format": "path",
+          "description": "Directory containing the DUCKS4 BLAST database files.",
+          "default": "ressources/blast_db"
+        },
+        "fshd_locus_bed": {
+          "type": "string",
+          "format": "path",
+          "description": "BED file for locus extraction on T2T coordinates."
+        },
+        "methylation_regions_bed": {
+          "type": "string",
+          "format": "path",
+          "description": "BED file for methylation summarization on T2T coordinates."
+        }
+      }
+    },
+    "analysis": {
+      "title": "Analysis Options",
+      "type": "object",
+      "fa_icon": "fas fa-sliders-h",
+      "properties": {
+        "run_methylation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Attempt modkit-based methylation profiling after repairing MM/ML tags onto the T2T-aligned subset BAMs."
+        },
+        "run_variant_calling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable HG38-based Clair3, Whatshap, Sniffles2, and ClinVar/snpEff annotation for FSHD-relevant variant calling."
+        },
+        "contraction_threshold_ru": {
+          "type": "integer",
+          "default": 10,
+          "minimum": 1,
+          "description": "Threshold used in the HTML report to flag a complete 4qA read as contracted."
+        }
+      }
+    },
+    "variant_assets": {
+      "title": "Variant Assets",
+      "type": "object",
+      "fa_icon": "fas fa-database",
+      "properties": {
+        "hg38_ref_fasta": {
+          "type": "string",
+          "format": "path",
+          "description": "HG38 no-alt reference FASTA for variant calling."
+        },
+        "clair3_model_tgz": {
+          "type": "string",
+          "format": "path",
+          "description": "Tarball containing the Clair3 ONT model directory."
+        },
+        "clinvar_vcf_gz": {
+          "type": "string",
+          "format": "path",
+          "description": "ClinVar VCF.gz used for annotation."
+        },
+        "clinvar_vcf_tbi": {
+          "type": "string",
+          "format": "path",
+          "description": "Tabix index for the ClinVar VCF.gz."
+        },
+        "snpeff_data_tgz": {
+          "type": "string",
+          "format": "path",
+          "description": "Tarball containing snpEff data with a hg38 database under data/hg38."
+        }
+      }
+    },
+    "output": {
+      "title": "Output",
+      "type": "object",
+      "fa_icon": "fas fa-folder-open",
+      "properties": {
+        "output_dir": {
+          "type": "string",
+          "format": "path",
+          "description": "Base output directory or object store prefix for published files."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/run_mode"
+    },
+    {
+      "$ref": "#/definitions/inputs"
+    },
+    {
+      "$ref": "#/definitions/references"
+    },
+    {
+      "$ref": "#/definitions/analysis"
+    },
+    {
+      "$ref": "#/definitions/variant_assets"
+    },
+    {
+      "$ref": "#/definitions/output"
+    }
+  ]
+}

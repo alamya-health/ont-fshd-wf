@@ -1,4 +1,93 @@
-# DUCKS4
+# ONT FSHD Workflow
+
+This repository now contains a modular Nextflow conversion of the original DUCKS4 toolkit so it can be run in Nextflow Tower with the same general repo shape as the other workflows in `~/Git`.
+
+The new workflow lives in:
+
+- `main.nf`
+- `nextflow.config`
+- `nextflow_schema.json`
+- `modules/`
+- `scripts/`
+
+## New Nextflow entrypoint
+
+The new pipeline supports two primary input modes:
+
+- A haplotagged aligned BAM, with optional direct reuse if it is already aligned to T2T-CHM13 and indexed
+- A directory of unaligned BAM files, which are merged and aligned inside the workflow
+
+The current modular conversion focuses on:
+
+- T2T alignment and FSHD locus extraction
+- BLAST-based D4Z4 / DUX4 haplotype classification
+- PAS assignment
+- Classified subset BAM generation
+- Optional repaired methylation profiling using `modkit repair`
+- Optional HG38-based FSHD variant calling with Clair3, Whatshap, Sniffles2, ClinVar, and snpEff
+- A polished per-sample HTML report plus cohort summary
+
+The original monolithic DUCKS4 Python/R entrypoint is still present for reference, but it is no longer the recommended interface for production use in this repo.
+
+### Example Nextflow usage
+
+Single aligned BAM:
+
+```bash
+nextflow run main.nf \
+  --sample_id SAMPLE_001 \
+  --input_aligned_bam /path/to/sample.bam \
+  --input_aligned_bai /path/to/sample.bam.bai \
+  --reuse_input_t2t_alignment true \
+  --t2t_ref_fasta s3://your-bucket/references/chm13v2.0.fa \
+  --output_dir s3://your-bucket/fshd-results
+```
+
+Directory of unaligned BAMs:
+
+```bash
+nextflow run main.nf \
+  --sample_id SAMPLE_001 \
+  --input_ubam_dir /path/to/unaligned-bams \
+  --t2t_ref_fasta s3://your-bucket/references/chm13v2.0.fa \
+  --output_dir s3://your-bucket/fshd-results
+```
+
+Multi-sample mode:
+
+```csv
+sample_id,input_aligned_bam,input_aligned_bai,input_ubam_dir,reuse_input_t2t_alignment
+S1,/data/S1.bam,/data/S1.bam.bai,,true
+S2,,,/data/S2_ubams,false
+```
+
+Build/push helper scripts for AWS ECR are under `scripts/`.
+
+## Variant-calling assets for S3
+
+The modular variant branch is designed so the large immutable assets can live outside the container images, ideally in S3 and referenced by params:
+
+- `--hg38_ref_fasta`
+- `--clair3_model_tgz`
+- `--clinvar_vcf_gz`
+- `--clinvar_vcf_tbi`
+- `--snpeff_data_tgz`
+
+Recommended packaging:
+
+- `clair3_model_tgz`: tarball whose top-level extracted directory is the Clair3 ONT model folder
+- `snpeff_data_tgz`: tarball that extracts to a structure containing `data/hg38`
+- `scripts/fetch_variant_assets.sh /tmp/ont-fshd-variant-assets`: reproducibly stages the HG38, Clair3, ClinVar, and snpEff assets listed above
+- `scripts/fetch_t2t_assets.sh /tmp/ont-fshd-t2t-assets`: reproducibly stages `chm13v2.0.fa`, `chm13v2.0.fa.fai`, and a prebuilt `chm13v2.0.mmi` index for S3 hosting
+- `scripts/push_fshd_bundle_to_s3.sh --dry-run`: previews upload of the staged variant and T2T bundles to `s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/`
+
+Enable the branch with:
+
+```bash
+--run_variant_calling true
+```
+
+## Legacy DUCKS4 notes
 
 FSHD-analysis tool for Nanopore-Sequencing.
 
@@ -171,7 +260,7 @@ This repository contains the sequencing data from the human reference genomes HG
 
 If using the workflow for a publication please cite:
 
-<Löwenstern T., Madritsch M., Horner D., Brait N., Güleray Lafci N., Schachner A., Gerykova Bujalkova M., Kałużewski T., Szyld P., Hengstschläger M., Dremsek P., Laccone F. DUCKS4: A comprehensive workflow for Nanopore sequencing analysis of Facioscapulohumeral Muscular Dystrophy (FSHD). Human Genomics. Manuscript accepted.>
+<Löwenstern T., Madritsch M., Horner D., Brait N., Güleray Lafci N., Schachner A., Gerykova Bujalkova M., Kałużewski T., Szyld P., Hengstschläger M., Dremsek P., Laccone F. DUCKS4: a comprehensive workflow for Nanopore sequencing analysis of facioscapulohumeral muscular dystrophy (FSHD). Human Genomics. 2026;20:48.>
 
 
 

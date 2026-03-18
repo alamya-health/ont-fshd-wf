@@ -1,0 +1,39 @@
+# Nextflow runtime state
+.nextflow/
+.nextflow*
+work/
+out/
+results/
+.tower/
+
+# Nextflow reports and logs
+trace*.txt
+timeline*.html
+report*.html
+dag*.svg
+*.nextflow.log*
+
+# Task execution artifacts
+*.command.begin
+*.command.err
+*.command.log
+*.command.out
+*.command.run
+*.command.sh
+*.command.trace
+*.exitcode
+
+# Local validation and scratch space
+.test/
+.validation-out/
+.dev/
+
+# Local reference bundle staging
+ont-fshd-variant-assets/
+ont-fshd-t2t-assets/
+reference-bundles/
+bundle-staging/
+
+# OS/editor noise
+.DS_Store
+*.swp
