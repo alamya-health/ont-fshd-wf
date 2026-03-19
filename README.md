@@ -68,6 +68,7 @@ Build/push helper scripts for AWS ECR are under `scripts/`.
 The modular variant branch is designed so the large immutable assets can live outside the container images, ideally in S3 and referenced by params:
 
 - `--hg38_ref_fasta`
+- `--hg38_ref_mmi` (optional)
 - `--clair3_model_tgz`
 - `--clinvar_vcf_gz`
 - `--clinvar_vcf_tbi`
@@ -80,6 +81,12 @@ Recommended packaging:
 - `scripts/fetch_variant_assets.sh /tmp/ont-fshd-variant-assets`: reproducibly stages the HG38, Clair3, ClinVar, and snpEff assets listed above
 - `scripts/fetch_t2t_assets.sh /tmp/ont-fshd-t2t-assets`: reproducibly stages `chm13v2.0.fa`, `chm13v2.0.fa.fai`, and a prebuilt `chm13v2.0.mmi` index for S3 hosting
 - `scripts/push_fshd_bundle_to_s3.sh --dry-run`: previews upload of the staged variant and T2T bundles to `s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/`
+
+Alignment notes:
+
+- uBAM inputs are merged with `samtools merge -u` and validated with `samtools quickcheck -u -v`, which avoids false failures on unmapped BAMs with no `@SQ` targets
+- alignments preserve `MM` and `ML` tags onto the aligned BAM by passing them through `samtools fastq -T MM,ML` and restoring them with `minimap2 -y`
+- the workflow aligns against the FASTA by default, but it can use optional `.mmi` references if you decide to provide them later
 
 Enable the branch with:
 

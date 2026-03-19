@@ -62,6 +62,12 @@
           "description": "T2T-CHM13v2.0 FASTA used for alignment and methylation.",
           "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/t2t/chm13/chm13v2.0.fa"
         },
+        "t2t_ref_mmi": {
+          "type": "string",
+          "format": "path",
+          "description": "Optional T2T minimap2 MMI index for faster alignment startup. Leave blank to align directly against the FASTA.",
+          "default": ""
+        },
         "blast_db_dir": {
           "type": "string",
           "format": "path",
@@ -100,6 +106,11 @@
           "default": 10,
           "minimum": 1,
           "description": "Threshold used in the HTML report to flag a complete 4qA read as contracted."
+        },
+        "minimap2_preset": {
+          "type": "string",
+          "default": "lr:hq",
+          "description": "Minimap2 preset used when aligning BAM/uBAM reads to T2T or HG38."
         }
       }
     },
@@ -113,6 +124,12 @@
           "format": "path",
           "description": "HG38 no-alt reference FASTA for variant calling.",
           "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/hg38/hg38_no_alt.fa"
+        },
+        "hg38_ref_mmi": {
+          "type": "string",
+          "format": "path",
+          "description": "Optional HG38 minimap2 MMI index for faster alignment startup in the variant branch. Leave blank to align directly against the FASTA.",
+          "default": ""
         },
         "clair3_model_tgz": {
           "type": "string",

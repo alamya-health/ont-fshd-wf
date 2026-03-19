@@ -46,9 +46,10 @@ process MERGE_UNALIGNED_BAMS {
     if [[ "\${#bam_files[@]}" -eq 1 ]]; then
       cp "\${bam_files[0]}" "${sample_id}.input.bam"
     else
-      samtools merge -@ ${mergeThreads} -f "${sample_id}.input.bam" "\${bam_files[@]}"
+      samtools merge -u -@ ${mergeThreads} -f "${sample_id}.input.bam" "\${bam_files[@]}"
     fi
 
-    samtools quickcheck -v "${sample_id}.input.bam"
+    # uBAMs may not carry @SQ targets; validate them in unmapped mode.
+    samtools quickcheck -u -v "${sample_id}.input.bam"
     """
 }

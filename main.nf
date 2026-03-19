@@ -132,9 +132,12 @@ workflow {
     MERGE_UNALIGNED_BAMS( ch_ubam_samples )
     ch_merged_original_bam = MERGE_UNALIGNED_BAMS.out[0]
 
+    def t2tAlignRef = params.t2t_ref_mmi ? file(params.t2t_ref_mmi.toString()) : file(params.t2t_ref_fasta.toString())
+    def hg38AlignRef = params.hg38_ref_mmi ? file(params.hg38_ref_mmi.toString()) : file(params.hg38_ref_fasta.toString())
+
     ch_need_alignment = ch_merged_original_bam.mix(ch_aligned_realign)
     ch_align_input = ch_need_alignment.map { sid, bam ->
-        tuple(sid, bam, file(params.t2t_ref_fasta.toString()))
+        tuple(sid, bam, t2tAlignRef)
     }
 
     ALIGN_READS_TO_T2T( ch_align_input )
@@ -209,7 +212,7 @@ workflow {
 
     if( params.run_variant_calling ) {
         ch_hg38_align_input = ch_original_bam.map { sid, original_bam ->
-            tuple(sid, original_bam, file(params.hg38_ref_fasta.toString()))
+            tuple(sid, original_bam, hg38AlignRef)
         }
 
         ALIGN_READS_TO_HG38( ch_hg38_align_input )
