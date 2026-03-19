@@ -32,22 +32,7 @@ process PROFILE_FSHD_METHYLATION {
     fi
 
     bam_has_modtags() {
-      python3 - "\$1" <<'PY'
-import sys
-import pysam
-
-bam_path = sys.argv[1]
-bam = pysam.AlignmentFile(bam_path, "rb", check_sq=False)
-found = False
-for idx, aln in enumerate(bam.fetch(until_eof=True)):
-    if aln.has_tag("MM") or aln.has_tag("Mm"):
-        found = True
-        break
-    if idx >= 2000:
-        break
-bam.close()
-sys.exit(0 if found else 1)
-PY
+      check_bam_modtags.py "\$1"
     }
 
     if bam_has_modtags "${original_bam}"; then
@@ -120,30 +105,7 @@ PY
         -o "\${work_prefix}.stats.tsv" \
         "\${work_prefix}.methyl.bed.gz"
 
-      mean_pct="\$(python3 - "\${work_prefix}.methyl.bed.gz" <<'PY'
-import gzip
-import sys
-
-bed_path = sys.argv[1]
-weighted = 0.0
-coverage = 0.0
-with gzip.open(bed_path, "rt") as fh:
-    for line in fh:
-        if not line.strip() or line.startswith("track"):
-            continue
-        parts = line.rstrip("\\n").split("\\t")
-        if len(parts) < 11:
-            continue
-        try:
-            cov = float(parts[9])
-            pct = float(parts[10])
-        except ValueError:
-            continue
-        weighted += cov * pct
-        coverage += cov
-print(f"{(weighted / coverage) if coverage else 0.0:.3f}")
-PY
-)"
+      mean_pct="\$(compute_modkit_mean_pct.py "\${work_prefix}.methyl.bed.gz")"
 
       printf "%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n" \
         "\${subset_name}" \
