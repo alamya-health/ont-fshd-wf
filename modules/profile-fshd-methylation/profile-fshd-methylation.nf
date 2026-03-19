@@ -31,7 +31,8 @@ process PROFILE_FSHD_METHYLATION {
       exit 0
     fi
 
-    if python3 - "${original_bam}" <<'PY'
+    bam_has_modtags() {
+      python3 - "$1" <<'PY'
 import sys
 import pysam
 
@@ -47,17 +48,12 @@ for idx, aln in enumerate(bam.fetch(until_eof=True)):
 bam.close()
 sys.exit(0 if found else 1)
 PY
-    then
-      modtags_ok=0
-    else
-      modtags_ok=1
-    fi
+    }
 
-    if [[ "\${modtags_ok}" -ne 0 ]]; then
-      for subset_name in 4qA_all 4qA_complete chimeric; do
-        printf "%s\\t%s\\t0\\t0\\tNA\\tNA\\tNA\\tNA\\n" "\${subset_name}" "no_mod_tags_detected" >> "\${summary}"
-      done
-      exit 0
+    if bam_has_modtags "${original_bam}"; then
+      original_modtags_ok=0
+    else
+      original_modtags_ok=1
     fi
 
     declare -a subsets=(
@@ -82,23 +78,32 @@ PY
         continue
       fi
 
-      samtools view "\${subset_bam}" | cut -f1 | sort -u > "\${work_prefix}.ids.txt"
-      samtools view -F 0x900 -N "\${work_prefix}.ids.txt" -b "${original_bam}" > "\${work_prefix}.donor.raw.bam"
-      donor_read_count="\$(samtools view -c "\${work_prefix}.donor.raw.bam" || true)"
-      if [[ "\${donor_read_count}" == "0" ]]; then
-        printf "%s\\t%s\\t%s\\t0\\tNA\\tNA\\tNA\\tNA\\n" "\${subset_name}" "no_matching_donor_reads" "\${subset_read_count}" >> "\${summary}"
+      if bam_has_modtags "\${subset_bam}"; then
+        donor_read_count="\${subset_read_count}"
+        samtools sort -o "\${work_prefix}.repaired.bam" "\${subset_bam}"
+      elif [[ "\${original_modtags_ok}" -eq 0 ]]; then
+        samtools view "\${subset_bam}" | cut -f1 | sort -u > "\${work_prefix}.ids.txt"
+        samtools view -F 0x900 -N "\${work_prefix}.ids.txt" -b "${original_bam}" > "\${work_prefix}.donor.raw.bam"
+        donor_read_count="\$(samtools view -c "\${work_prefix}.donor.raw.bam" || true)"
+        if [[ "\${donor_read_count}" == "0" ]]; then
+          printf "%s\\t%s\\t%s\\t0\\tNA\\tNA\\tNA\\tNA\\n" "\${subset_name}" "no_matching_donor_reads" "\${subset_read_count}" >> "\${summary}"
+          continue
+        fi
+
+        samtools sort -n -o "\${work_prefix}.donor.name.bam" "\${work_prefix}.donor.raw.bam"
+        samtools sort -n -o "\${work_prefix}.acceptor.name.bam" "\${subset_bam}"
+
+        modkit repair \
+          "\${work_prefix}.donor.name.bam" \
+          "\${work_prefix}.acceptor.name.bam" \
+          "\${work_prefix}.repaired.name.bam"
+
+        samtools sort -o "\${work_prefix}.repaired.bam" "\${work_prefix}.repaired.name.bam"
+      else
+        printf "%s\\t%s\\t%s\\t0\\tNA\\tNA\\tNA\\tNA\\n" "\${subset_name}" "no_mod_tags_detected" "\${subset_read_count}" >> "\${summary}"
         continue
       fi
 
-      samtools sort -n -o "\${work_prefix}.donor.name.bam" "\${work_prefix}.donor.raw.bam"
-      samtools sort -n -o "\${work_prefix}.acceptor.name.bam" "\${subset_bam}"
-
-      modkit repair \
-        "\${work_prefix}.donor.name.bam" \
-        "\${work_prefix}.acceptor.name.bam" \
-        "\${work_prefix}.repaired.name.bam"
-
-      samtools sort -o "\${work_prefix}.repaired.bam" "\${work_prefix}.repaired.name.bam"
       samtools index "\${work_prefix}.repaired.bam"
 
       modkit pileup \

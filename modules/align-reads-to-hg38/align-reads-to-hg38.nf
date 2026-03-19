@@ -18,8 +18,14 @@ process ALIGN_READS_TO_HG38 {
 
     samtools quickcheck -v "${input_bam}"
 
-    samtools fastq -F 0x900 -T '*' "${input_bam}" \
-      | minimap2 -ax lr:hq --MD -L -Y -t ${task.cpus} "${hg38_ref_fasta}" - \
+    samtools fastq \
+      -F 0x900 \
+      -n \
+      -T MM,ML \
+      -0 /dev/null \
+      -s /dev/null \
+      "${input_bam}" \
+      | minimap2 -ax lr:hq --MD -L -Y -y -t ${task.cpus} "${hg38_ref_fasta}" - \
       | samtools sort -@ ${task.cpus} -o "${sample_id}.hg38.bam" -
 
     samtools index -@ ${task.cpus} "${sample_id}.hg38.bam"
