@@ -8,7 +8,7 @@ RUN apt-get update \
        bash \
        ca-certificates \
        curl \
-       openjdk-21-jre-headless \
+       openjdk-17-jre-headless \
        unzip \
        wget \
     && rm -rf /var/lib/apt/lists/*

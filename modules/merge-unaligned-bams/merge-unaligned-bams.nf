@@ -16,9 +16,28 @@ process MERGE_UNALIGNED_BAMS {
     """
     set -euo pipefail
 
-    mapfile -t bam_files < <(find "${input_ubam_dir}" -maxdepth 1 -type f -name '*.bam' | sort)
+    bam_root="${input_ubam_dir}"
+    declare -a bam_files=()
+
+    if [[ -f "$bam_root" ]]; then
+      case "$bam_root" in
+        *.bam|*.BAM)
+          bam_files=("$bam_root")
+          ;;
+        *)
+          echo "Input path is a file but not a BAM: $bam_root" >&2
+          exit 1
+          ;;
+      esac
+    elif [[ -d "$bam_root" ]]; then
+      mapfile -d '' -t bam_files < <(find -L "$bam_root" -type f \\( -iname '*.bam' \\) -print0 | sort -z)
+    else
+      echo "Input path does not exist or is not accessible: $bam_root" >&2
+      exit 1
+    fi
+
     if [[ "\${#bam_files[@]}" -eq 0 ]]; then
-      echo "No BAM files found in ${input_ubam_dir}" >&2
+      echo "No BAM files found in $bam_root" >&2
       exit 1
     fi
 

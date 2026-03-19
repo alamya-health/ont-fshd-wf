@@ -1,0 +1,2 @@
+sample_id,input_aligned_bam,input_aligned_bai,input_ubam_dir,reuse_input_t2t_alignment
+OC195M,,,s3://alamyasingapore-nus-p2i-upload/OC195M/,false
