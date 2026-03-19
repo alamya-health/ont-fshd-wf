@@ -32,7 +32,7 @@ process PROFILE_FSHD_METHYLATION {
     fi
 
     bam_has_modtags() {
-      python3 - "$1" <<'PY'
+      python3 - "\$1" <<'PY'
 import sys
 import pysam
 
