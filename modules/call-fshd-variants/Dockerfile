@@ -9,6 +9,7 @@ RUN apt-get update \
        ca-certificates \
        curl \
        openjdk-17-jre-headless \
+       procps \
        unzip \
        wget \
     && rm -rf /var/lib/apt/lists/*

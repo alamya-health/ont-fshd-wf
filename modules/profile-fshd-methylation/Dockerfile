@@ -22,6 +22,7 @@ RUN apt-get update \
        libncurses5-dev \
        libncursesw5-dev \
        make \
+       procps \
        python3 \
        python3-pip \
        wget \

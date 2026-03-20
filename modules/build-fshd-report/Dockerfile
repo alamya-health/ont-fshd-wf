@@ -6,6 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        bash \
        ca-certificates \
+       procps \
        python3 \
     && rm -rf /var/lib/apt/lists/*
 

@@ -6,6 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        bash \
        ca-certificates \
+       procps \
        r-base \
        r-cran-dplyr \
        r-cran-tidyr \
