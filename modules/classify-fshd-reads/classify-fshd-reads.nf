@@ -23,7 +23,7 @@ process CLASSIFY_FSHD_READS {
 
     shopt -s nullglob
     for f in *.csv *.txt *.log; do
-      mv "$f" "${sample_id}.fshd.classification/"
+      mv "\$f" "${sample_id}.fshd.classification/"
     done
     if [[ -d blast_results ]]; then
       mv blast_results "${sample_id}.fshd.classification/"
