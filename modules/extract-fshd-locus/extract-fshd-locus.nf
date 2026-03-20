@@ -38,7 +38,7 @@ process EXTRACT_FSHD_LOCUS {
 
     printf "#chrom\tstart\tend\tlabel\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\tmeanmapq\n" > "${sample_id}.fshd.locus.coverage.tsv"
     tab_char="\$(printf '\t')"
-    while IFS="${tab_char}" read -r chrom start end label _; do
+    while IFS="\${tab_char}" read -r chrom start end label _; do
       [[ -n "\${chrom}" ]] || continue
       [[ "\${chrom}" =~ ^# ]] && continue
 
