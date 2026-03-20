@@ -63,6 +63,20 @@ S2,,,/data/S2_ubams,false
 
 Build/push helper scripts for AWS ECR are under `scripts/`.
 
+### Local validation
+
+To catch Nextflow module compilation and branching issues before Tower:
+
+```bash
+scripts/dev_stub_run.sh
+bash scripts/run_workflow_tests.sh
+```
+
+The stub test script exercises both:
+
+- unaligned-BAM input mode
+- aligned-BAM input mode with variant calling enabled
+
 ## Variant-calling assets for S3
 
 The modular variant branch is designed so the large immutable assets can live outside the container images, ideally in S3 and referenced by params:

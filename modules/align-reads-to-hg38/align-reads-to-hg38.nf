@@ -35,4 +35,12 @@ process ALIGN_READS_TO_HG38 {
 
     samtools index -@ ${task.cpus} "${sample_id}.hg38.bam"
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    touch "${sample_id}.hg38.bam"
+    touch "${sample_id}.hg38.bam.bai"
+    """
 }

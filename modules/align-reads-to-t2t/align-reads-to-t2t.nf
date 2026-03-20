@@ -35,4 +35,12 @@ process ALIGN_READS_TO_T2T {
 
     samtools index -@ ${task.cpus} "${sample_id}.t2t.bam"
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    touch "${sample_id}.t2t.bam"
+    touch "${sample_id}.t2t.bam.bai"
+    """
 }

@@ -30,4 +30,20 @@ process BUILD_FSHD_REPORT {
       "${sample_id}.fshd.report.html" \
       "${sample_id}.fshd.report.summary.tsv"
     """
+
+  stub:
+    """
+    cat <<EOF > "${sample_id}.fshd.report.html"
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>${sample_id} FSHD Report</title></head>
+<body><h1>${sample_id} FSHD Report</h1><p>Stub report output.</p></body>
+</html>
+EOF
+
+    cat <<'EOF' > "${sample_id}.fshd.report.summary.tsv"
+sample_id	contraction_status	haplotype_status	methylation_status	variant_status
+stub	stub	stub	stub	stub
+EOF
+    """
 }

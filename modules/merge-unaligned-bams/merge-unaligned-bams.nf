@@ -52,4 +52,11 @@ process MERGE_UNALIGNED_BAMS {
     # uBAMs may not carry @SQ targets; validate them in unmapped mode.
     samtools quickcheck -u -v "${sample_id}.input.bam"
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    touch "${sample_id}.input.bam"
+    """
 }

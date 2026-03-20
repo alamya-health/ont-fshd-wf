@@ -151,4 +151,19 @@ process CALL_FSHD_VARIANTS {
       "\${outdir}/${sample_id}.t2t.sniffles2.vcf" \
       "${sample_id}.variant.summary.tsv"
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    mkdir -p "${sample_id}.variant-calling"
+    touch "${sample_id}.variant-calling/${sample_id}.hg38.haplotagged.bam"
+    touch "${sample_id}.variant-calling/${sample_id}.hg38.haplotagged.bam.bai"
+    touch "${sample_id}.variant-calling/${sample_id}.hg38.sniffles2.phased.vcf"
+    touch "${sample_id}.variant-calling/${sample_id}.t2t.sniffles2.vcf"
+    cat <<'EOF' > "${sample_id}.variant.summary.tsv"
+status	total_clair3_variants	relevant_variant_records	clinvar_fshd_hits	hg38_sv_records	t2t_sv_records	relevant_genes
+ready	1	1	0	0	0	SMCHD1
+EOF
+    """
 }

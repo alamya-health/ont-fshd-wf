@@ -118,4 +118,21 @@ process PROFILE_FSHD_METHYLATION {
         "\${work_prefix}.repaired.bam" >> "\${summary}"
     done
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    outdir="${sample_id}.methylation"
+    mkdir -p "\${outdir}"
+    touch "\${outdir}/4qA_all.repaired.bam"
+    touch "\${outdir}/4qA_complete.repaired.bam"
+    touch "\${outdir}/chimeric.repaired.bam"
+    cat <<'EOF' > "${sample_id}.methylation.summary.tsv"
+subset_name	status	subset_read_count	donor_read_count	mean_percent_modified	pileup_bed_gz	stats_tsv	repaired_bam
+4qA_all	ready	1	1	42.0	stub	stub	stub
+4qA_complete	ready	1	1	40.0	stub	stub	stub
+chimeric	ready	1	1	35.0	stub	stub	stub
+EOF
+    """
 }

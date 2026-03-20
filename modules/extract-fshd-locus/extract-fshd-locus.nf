@@ -37,14 +37,30 @@ process EXTRACT_FSHD_LOCUS {
     samtools flagstat -@ ${task.cpus} "${sample_id}.fshd.locus.bam" > "${sample_id}.fshd.locus.flagstat.txt"
 
     printf "#chrom\tstart\tend\tlabel\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\tmeanmapq\n" > "${sample_id}.fshd.locus.coverage.tsv"
-    while IFS=$'\t' read -r chrom start end label _; do
+    tab_char="\$(printf '\t')"
+    while IFS="${tab_char}" read -r chrom start end label _; do
       [[ -n "\${chrom}" ]] || continue
       [[ "\${chrom}" =~ ^# ]] && continue
 
       region="\${chrom}:\$((start + 1))-\${end}"
       samtools coverage -r "\${region}" "${sample_id}.fshd.locus.bam" \
-        | awk -v chrom="\${chrom}" -v start="\${start}" -v end="\${end}" -v label="\${label:-\${region}}" 'BEGIN{OFS="\t"} NR > 1 {print chrom, start, end, label, $4, $5, $6, $7, $8, $9}' \
+        | awk -v chrom="\${chrom}" -v start="\${start}" -v end="\${end}" -v label="\${label:-\${region}}" 'BEGIN{OFS="\t"} NR > 1 {print chrom, start, end, label, \$4, \$5, \$6, \$7, \$8, \$9}' \
         >> "${sample_id}.fshd.locus.coverage.tsv"
     done < "${target_bed}"
+    """
+
+  stub:
+    """
+    set -euo pipefail
+
+    touch "${sample_id}.fshd.locus.bam"
+    touch "${sample_id}.fshd.locus.bam.bai"
+    cat <<'EOF' > "${sample_id}.fshd.locus.flagstat.txt"
+10 + 0 in total (QC-passed reads + QC-failed reads)
+EOF
+    cat <<'EOF' > "${sample_id}.fshd.locus.coverage.tsv"
+#chrom	start	end	label	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq
+chr4	193376059	193584945	DUX4_region	10	1000	100.0	25.0	30.0	60.0
+EOF
     """
 }

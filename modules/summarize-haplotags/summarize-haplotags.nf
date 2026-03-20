@@ -18,4 +18,12 @@ process SUMMARIZE_HAPLOTAGS {
 
     summarize_fshd_haplotags.py "${original_bam}" "${classification_dir}" "${sample_id}.haplotag.summary.tsv"
     """
+
+  stub:
+    """
+    cat <<'EOF' > "${sample_id}.haplotag.summary.tsv"
+sample_id	haplotype	read_count
+stub	4qA	1
+EOF
+    """
 }

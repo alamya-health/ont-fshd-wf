@@ -29,4 +29,29 @@ process CLASSIFY_FSHD_READS {
       mv blast_results "${sample_id}.fshd.classification/"
     fi
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    outdir="${sample_id}.fshd.classification"
+    mkdir -p "\${outdir}"
+    for id_file in \
+      4qA_all-reads-ID.txt \
+      4qA_complete-reads-ID.txt \
+      4qB_all-reads-ID.txt \
+      4qB_complete-reads-ID.txt \
+      chimeric-reads-ID.txt \
+      chr10_all-reads-ID.txt \
+      chr10_complete-reads-ID.txt \
+      chr4-undefined_all-reads-ID.txt \
+      D4Z4-only_chr4-reads-ID.txt \
+      D4Z4-only_chr10-reads-ID.txt
+    do
+      printf "stub_read\n" > "\${outdir}/\${id_file}"
+    done
+    cat <<'EOF' > "\${outdir}/${sample_id}.overview.txt"
+stub classification
+EOF
+    """
 }

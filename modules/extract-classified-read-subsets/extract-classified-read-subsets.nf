@@ -62,4 +62,22 @@ process EXTRACT_CLASSIFIED_READ_SUBSETS {
       printf "%s\\t%s\\t%s\\t%s\\tready\\n" "\${subset_name}" "\${id_file}" "\${out_bam}" "\${read_count}" >> "\${manifest}"
     done
     """
+
+  stub:
+    """
+    set -euo pipefail
+
+    outdir="${sample_id}.classified-subsets"
+    mkdir -p "\${outdir}"
+    manifest="\${outdir}/${sample_id}.classified-subsets.manifest.tsv"
+    cat <<'EOF' > "\${manifest}"
+subset_name	id_file	bam_path	read_count	status
+4qA_all	4qA_all-reads-ID.txt	stub	1	ready
+4qA_complete	4qA_complete-reads-ID.txt	stub	1	ready
+chimeric	chimeric-reads-ID.txt	stub	1	ready
+EOF
+    touch "\${outdir}/${sample_id}.4qA_all.bam"
+    touch "\${outdir}/${sample_id}.4qA_complete.bam"
+    touch "\${outdir}/${sample_id}.chimeric.bam"
+    """
 }

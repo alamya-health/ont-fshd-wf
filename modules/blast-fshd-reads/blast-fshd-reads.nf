@@ -25,4 +25,11 @@ process BLAST_FSHD_READS {
       -out "${sample_id}.fshd-blast.txt" \
       -outfmt '6 qseqid sseqid pident slen length mismatch gapopen qstart qend sstart send evalue bitscore'
     """
+
+  stub:
+    """
+    cat <<'EOF' > "${sample_id}.fshd-blast.txt"
+stub_read	chr4_D4Z4-4q35	99.0	1000	1000	0	0	1	1000	1	1000	0.0	2000
+EOF
+    """
 }

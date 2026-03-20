@@ -22,4 +22,12 @@ process PAS_CHECK_FSHD {
 
     check_fshd_pas.py "${locus_bam}" "${sample_id}.PAS.txt"
     """
+
+  stub:
+    """
+    cat <<'EOF' > "${sample_id}.PAS.txt"
+read_id	pas_sequence	pas_type	pas_status
+stub_read	ATTAAAAT	disrupted	stub
+EOF
+    """
 }
