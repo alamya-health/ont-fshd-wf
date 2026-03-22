@@ -28,8 +28,8 @@ process ALIGN_READS_TO_HG38 {
 
     # Use reset+fastq so re-alignment does not inherit stale mapping tags from pre-aligned BAMs.
     # MM/ML are preserved through FASTQ comments and restored by minimap2 -y.
-    ${reset_cmd_body} "${input_bam}" -o - \
-      | ${fastq_cmd_body} - \
+    \${reset_cmd_body} "${input_bam}" -o - \
+      | \${fastq_cmd_body} - \
       | minimap2 -ax ${params.minimap2_preset} --MD -L -Y -y -t ${task.cpus} "${hg38_align_ref}" - \
       | samtools sort -@ ${task.cpus} -o "${sample_id}.hg38.bam" -
 
