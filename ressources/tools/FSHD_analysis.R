@@ -30,6 +30,38 @@ mat <- read.table(args[1], header = FALSE, col.names = titles, fill=TRUE,strings
 pas <- read.table(args[2], header = TRUE, fill=TRUE,stringsAsFactor=FALSE)
 setwd(args[3])
 
+empty_id_outputs <- c(
+  "4qB_all-reads-ID.txt",
+  "4qB_complete-reads-ID.txt",
+  "4qA_all-reads-ID.txt",
+  "4qA_complete-reads-ID.txt",
+  "chimeric-reads-ID.txt",
+  "D4Z4-only_chr4-reads-ID.txt",
+  "D4Z4-only_chr10-reads-ID.txt",
+  "chr4-undefined_all-reads-ID.txt",
+  "chr10_all-reads-ID.txt",
+  "chr10_complete-reads-ID.txt"
+)
+
+write_empty_classification_outputs <- function(reason) {
+  invisible(file.create(empty_id_outputs))
+  writeLines(reason, con = "FSHD_overview-statistics.csv")
+}
+
+mat[] <- lapply(mat, function(col) {
+  if (is.factor(col)) {
+    as.character(col)
+  } else {
+    col
+  }
+})
+mat$region <- as.character(mat$region)
+
+if (NROW(mat) == 0 || all(is.na(mat$region)) || all(trimws(mat$region) == "")) {
+  write_empty_classification_outputs("No BLAST hits available for FSHD classification.")
+  quit(save = "no", status = 0)
+}
+
 
 
 #####
