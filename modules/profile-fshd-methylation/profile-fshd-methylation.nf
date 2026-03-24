@@ -94,7 +94,10 @@ process PROFILE_FSHD_METHYLATION {
       modkit pileup \
         "\${work_prefix}.repaired.bam" \
         "\${work_prefix}.methyl.bed" \
+        --modified-bases 5mC \
+        --combine-strands \
         --cpg \
+        --threads ${task.cpus} \
         --ref "${t2t_ref_fasta}"
 
       bgzip -f "\${work_prefix}.methyl.bed"
