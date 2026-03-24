@@ -25,6 +25,7 @@ RUN apt-get update \
        procps \
        python3 \
        python3-pip \
+       tabix \
        wget \
        zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*

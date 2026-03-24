@@ -111,6 +111,11 @@
           "type": "string",
           "default": "lr:hq",
           "description": "Minimap2 preset used when aligning BAM/uBAM reads to T2T or HG38."
+        },
+        "profile_fshd_methylation_image_tag": {
+          "type": "string",
+          "default": "",
+          "description": "Optional ECR tag override for PROFILE_FSHD_METHYLATION only. Leave blank to use the global image_tag."
         }
       }
     },
