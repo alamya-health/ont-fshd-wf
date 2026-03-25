@@ -118,9 +118,6 @@ workflow {
         if( !params.hg38_ref_fasta ) {
             error "Missing required parameter for variant calling: --hg38_ref_fasta"
         }
-        if( !params.clair3_model_tgz ) {
-            error "Missing required parameter for variant calling: --clair3_model_tgz"
-        }
         if( !params.snpeff_data_tgz ) {
             error "Missing required parameter for variant calling: --snpeff_data_tgz"
         }
@@ -131,6 +128,10 @@ workflow {
 
     MERGE_UNALIGNED_BAMS( ch_ubam_samples )
     ch_merged_original_bam = MERGE_UNALIGNED_BAMS.out[0]
+
+    def bundledClair3Placeholder = file("${projectDir}/assets/clair3_model.placeholder")
+    def clair3ModelAssetPath = params.clair3_model_path ? params.clair3_model_path.toString().trim() : (params.clair3_model_tgz ? params.clair3_model_tgz.toString().trim() : '')
+    def clair3ModelAsset = clair3ModelAssetPath ? file(clair3ModelAssetPath) : bundledClair3Placeholder
 
     def t2tAlignRef = params.t2t_ref_mmi ? file(params.t2t_ref_mmi.toString()) : file(params.t2t_ref_fasta.toString())
     def hg38AlignRef = params.hg38_ref_mmi ? file(params.hg38_ref_mmi.toString()) : file(params.hg38_ref_fasta.toString())
@@ -227,7 +228,7 @@ workflow {
         CALL_FSHD_VARIANTS(
             ch_variant_input,
             Channel.value(file(params.hg38_ref_fasta.toString())),
-            Channel.value(file(params.clair3_model_tgz.toString())),
+            Channel.value(clair3ModelAsset),
             Channel.value(file(params.clinvar_vcf_gz.toString())),
             Channel.value(file(params.clinvar_vcf_tbi.toString())),
             Channel.value(file(params.snpeff_data_tgz.toString()))

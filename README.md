@@ -83,18 +83,22 @@ The modular variant branch is designed so the large immutable assets can live ou
 
 - `--hg38_ref_fasta`
 - `--hg38_ref_mmi` (optional)
-- `--clair3_model_tgz`
+- `--clair3_model_name` (defaults to the bundled Clair3 container model)
+- `--clair3_model_path` (optional external override)
 - `--clinvar_vcf_gz`
 - `--clinvar_vcf_tbi`
 - `--snpeff_data_tgz`
 
 Recommended packaging:
 
-- `clair3_model_tgz`: tarball whose top-level extracted directory is the Clair3 ONT model folder
+- `clair3_model_name`: bundled Clair3 v2 model name inside the Clair3 container, default `r1041_e82_400bps_sup_v500`
+- `clair3_model_path`: optional directory or `.tar.gz` archive containing a Clair3 v2 model with `pileup.pt` and `full_alignment.pt`
 - `snpeff_data_tgz`: tarball that extracts to a structure containing `data/hg38`
-- `scripts/fetch_variant_assets.sh /tmp/ont-fshd-variant-assets`: reproducibly stages the HG38, Clair3, ClinVar, and snpEff assets listed above
+- `scripts/fetch_variant_assets.sh /tmp/ont-fshd-variant-assets`: reproducibly stages the HG38, ClinVar, and snpEff assets listed above. Set `FETCH_CLAIR3_MODEL=1` only if you explicitly want to stage an external Clair3 model override.
 - `scripts/fetch_t2t_assets.sh /tmp/ont-fshd-t2t-assets`: reproducibly stages `chm13v2.0.fa`, `chm13v2.0.fa.fai`, and a prebuilt `chm13v2.0.mmi` index for S3 hosting
 - `scripts/push_fshd_bundle_to_s3.sh --dry-run`: previews upload of the staged variant and T2T bundles to `s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/`
+
+By default, the workflow now uses the bundled Clair3 container model and does not require an external Clair3 asset in S3. The older `--clair3_model_tgz` param is still accepted as a deprecated alias for an external override archive.
 
 Alignment notes:
 

@@ -3,6 +3,7 @@ set -euo pipefail
 
 OUT_DIR="${1:-/tmp/ont-fshd-variant-assets}"
 CLAIR3_MODEL="${CLAIR3_MODEL:-r1041_e82_400bps_sup_v500}"
+FETCH_CLAIR3_MODEL="${FETCH_CLAIR3_MODEL:-0}"
 HG38_URL="https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz"
 CLAIR3_URL="https://cdn.oxfordnanoportal.com/software/analysis/models/clair3/${CLAIR3_MODEL}.tar.gz"
 CLINVAR_URL="https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz"
@@ -23,8 +24,12 @@ fetch() {
 echo "Downloading HG38 no-alt FASTA..."
 fetch "${HG38_URL}" "${OUT_DIR}/downloads/hg38_no_alt.fa.gz"
 
-echo "Downloading Clair3 model..."
-fetch "${CLAIR3_URL}" "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz"
+if [[ "${FETCH_CLAIR3_MODEL}" == "1" ]]; then
+  echo "Downloading optional external Clair3 model..."
+  fetch "${CLAIR3_URL}" "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz"
+else
+  echo "Skipping external Clair3 model download; the workflow defaults to the bundled Clair3 container model."
+fi
 
 echo "Downloading ClinVar..."
 fetch "${CLINVAR_URL}" "${OUT_DIR}/clinvar/clinvar.vcf.gz"
@@ -94,7 +99,6 @@ MANIFEST="${OUT_DIR}/manifest.tsv"
   for file in \
     "${OUT_DIR}/hg38/hg38_no_alt.fa" \
     "${OUT_DIR}/hg38/hg38_no_alt.fa.fai" \
-    "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz" \
     "${OUT_DIR}/clinvar/clinvar.vcf.gz" \
     "${OUT_DIR}/clinvar/clinvar.vcf.gz.tbi" \
     "${OUT_DIR}/snpeff/snpeff_hg38_data.tgz"
@@ -105,6 +109,13 @@ MANIFEST="${OUT_DIR}/manifest.tsv"
       "$(shasum -a 256 "${file}" | awk '{print $1}')" \
       "$(stat -f%z "${file}")"
   done
+  if [[ -f "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz" ]]; then
+    printf "%s\t%s\t%s\t%s\n" \
+      "$(basename "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz")" \
+      "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz" \
+      "$(shasum -a 256 "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz" | awk '{print $1}')" \
+      "$(stat -f%z "${OUT_DIR}/clair3/${CLAIR3_MODEL}.tar.gz")"
+  fi
 } > "${MANIFEST}"
 
 echo "Asset staging complete:"

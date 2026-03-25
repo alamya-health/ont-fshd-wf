@@ -1,28 +1,18 @@
-FROM mambaorg/micromamba:1.5.10
+FROM hkubal/clair3:latest
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       bash \
        ca-certificates \
        curl \
        openjdk-17-jre-headless \
-       procps \
        unzip \
        wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN micromamba install -y -n base -c conda-forge -c bioconda \
-      python=3.11 \
-      clair3 \
-      whatshap \
-      sniffles \
-      samtools \
-      bcftools \
-      tabix \
-    && micromamba clean --all --yes
+RUN python3 -m pip install --no-cache-dir sniffles==2.7.0
 
 RUN mkdir -p /opt/snpeff \
     && curl -fL https://snpeff-public.s3.amazonaws.com/versions/snpEff_latest_core.zip -o /tmp/snpeff.zip \

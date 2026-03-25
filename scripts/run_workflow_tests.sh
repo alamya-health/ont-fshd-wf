@@ -39,12 +39,11 @@ ALIGNED_BAM="${INPUT_DIR}/aligned/TEST_STUB.t2t.bam"
 ALIGNED_BAI="${INPUT_DIR}/aligned/TEST_STUB.t2t.bam.bai"
 T2T_FASTA="${INPUT_DIR}/refs/chm13v2.0.fa"
 HG38_FASTA="${INPUT_DIR}/refs/hg38_no_alt.fa"
-CLAIR3_TGZ="${INPUT_DIR}/assets/clair3_model.tar.gz"
 CLINVAR_VCF="${INPUT_DIR}/assets/clinvar.vcf.gz"
 CLINVAR_TBI="${INPUT_DIR}/assets/clinvar.vcf.gz.tbi"
 SNPEFF_TGZ="${INPUT_DIR}/assets/snpeff_hg38_data.tgz"
 
-touch "${UBAM}" "${ALIGNED_BAM}" "${ALIGNED_BAI}" "${CLAIR3_TGZ}" "${CLINVAR_VCF}" "${CLINVAR_TBI}" "${SNPEFF_TGZ}"
+touch "${UBAM}" "${ALIGNED_BAM}" "${ALIGNED_BAI}" "${CLINVAR_VCF}" "${CLINVAR_TBI}" "${SNPEFF_TGZ}"
 cat > "${T2T_FASTA}" <<'EOF'
 >chr4
 ACGTACGTACGTACGTACGTACGTACGTACGT
@@ -104,7 +103,6 @@ run_stub() {
       --reuse_input_t2t_alignment false
       --run_variant_calling true
       --hg38_ref_fasta "${HG38_FASTA}"
-      --clair3_model_tgz "${CLAIR3_TGZ}"
       --clinvar_vcf_gz "${CLINVAR_VCF}"
       --clinvar_vcf_tbi "${CLINVAR_TBI}"
       --snpeff_data_tgz "${SNPEFF_TGZ}"

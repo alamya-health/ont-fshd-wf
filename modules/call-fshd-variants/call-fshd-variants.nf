@@ -9,7 +9,7 @@ process CALL_FSHD_VARIANTS {
   input:
     tuple val(sample_id), path(hg38_bam), path(hg38_bai), path(t2t_bam), path(t2t_bai)
     path hg38_ref_fasta
-    path clair3_model_tgz
+    path clair3_model_asset
     path clinvar_vcf_gz
     path clinvar_vcf_tbi
     path snpeff_data_tgz
@@ -32,23 +32,35 @@ process CALL_FSHD_VARIANTS {
     outdir="${sample_id}.variant-calling"
     mkdir -p "\${outdir}/clair3" "\${outdir}/refs" "\${outdir}/assets"
 
-    tar -xzf "${clair3_model_tgz}" -C "\${outdir}/assets"
-    model_name="\$(basename "${clair3_model_tgz}" .tar.gz)"
-    model_dir=""
-    external_model_dir="\$(find "\${outdir}/assets" -mindepth 1 -maxdepth 4 -type f -name pileup.pt | sort | head -n 1 | xargs -r dirname)"
-    if [[ -n "\${external_model_dir}" && -f "\${external_model_dir}/full_alignment.pt" ]]; then
-      model_dir="\${external_model_dir}"
-    fi
-    if [[ -z "\${model_dir}" ]]; then
-      bundled_model_dir="/opt/conda/bin/models/\${model_name}"
-      if [[ -f "\${bundled_model_dir}/pileup.pt" && -f "\${bundled_model_dir}/full_alignment.pt" ]]; then
-        model_dir="\${bundled_model_dir}"
-        echo "Using bundled Clair3 PyTorch model at \${model_dir}" >&2
-      fi
-    fi
-    if [[ -z "\${model_dir}" ]]; then
-      echo "Unable to find a Clair3 PyTorch model directory with pileup.pt and full_alignment.pt" >&2
+    model_dir="/opt/models/${params.clair3_model_name}"
+    if [[ ! -f "\${model_dir}/pileup.pt" || ! -f "\${model_dir}/full_alignment.pt" ]]; then
+      echo "Bundled Clair3 model not found or incomplete: \${model_dir}" >&2
       exit 1
+    fi
+
+    if [[ "\$(basename "${clair3_model_asset}")" != "clair3_model.placeholder" ]]; then
+      candidate_model_dir=""
+      if [[ -d "${clair3_model_asset}" ]]; then
+        candidate_model_dir="\$(find "${clair3_model_asset}" -mindepth 0 -maxdepth 4 -type f -name pileup.pt | sort | head -n 1 | xargs -r dirname)"
+      elif [[ "${clair3_model_asset}" == *.tar.gz ]]; then
+        tar -xzf "${clair3_model_asset}" -C "\${outdir}/assets"
+        candidate_model_dir="\$(find "\${outdir}/assets" -mindepth 1 -maxdepth 4 -type f -name pileup.pt | sort | head -n 1 | xargs -r dirname)"
+      else
+        echo "Unsupported Clair3 model override asset: ${clair3_model_asset}" >&2
+        echo "Provide either a directory containing pileup.pt/full_alignment.pt or a .tar.gz archive of that directory." >&2
+        exit 1
+      fi
+
+      if [[ -n "\${candidate_model_dir}" && -f "\${candidate_model_dir}/full_alignment.pt" ]]; then
+        model_dir="\${candidate_model_dir}"
+        echo "Using external Clair3 model override at \${model_dir}" >&2
+      else
+        echo "External Clair3 model override did not contain pileup.pt and full_alignment.pt." >&2
+        echo "Leave the external Clair3 model param blank to use bundled model ${params.clair3_model_name}." >&2
+        exit 1
+      fi
+    else
+      echo "Using bundled Clair3 model at \${model_dir}" >&2
     fi
 
     tar -xzf "${snpeff_data_tgz}" -C "\${outdir}/assets"

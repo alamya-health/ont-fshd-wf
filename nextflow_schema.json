@@ -116,6 +116,11 @@
           "type": "string",
           "default": "",
           "description": "Optional ECR tag override for PROFILE_FSHD_METHYLATION only. Leave blank to use the global image_tag."
+        },
+        "call_fshd_variants_image_tag": {
+          "type": "string",
+          "default": "",
+          "description": "Optional ECR tag override for CALL_FSHD_VARIANTS only. Leave blank to use the global image_tag."
         }
       }
     },
@@ -136,11 +141,22 @@
           "description": "Optional HG38 minimap2 MMI index for faster alignment startup in the variant branch. Leave blank to align directly against the FASTA.",
           "default": ""
         },
+        "clair3_model_name": {
+          "type": "string",
+          "description": "Bundled Clair3 model name to use from the Clair3 container when no external override is provided.",
+          "default": "r1041_e82_400bps_sup_v500"
+        },
+        "clair3_model_path": {
+          "type": "string",
+          "format": "path",
+          "description": "Optional external Clair3 v2 model override. Provide either a directory containing pileup.pt/full_alignment.pt or a .tar.gz archive of that directory. Leave blank to use the bundled Clair3 model.",
+          "default": ""
+        },
         "clair3_model_tgz": {
           "type": "string",
           "format": "path",
-          "description": "Tarball containing the Clair3 ONT model directory.",
-          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/clair3/r1041_e82_400bps_sup_v500.tar.gz"
+          "description": "Deprecated alias for an external Clair3 model archive. Leave blank to use the bundled Clair3 model.",
+          "default": ""
         },
         "clinvar_vcf_gz": {
           "type": "string",

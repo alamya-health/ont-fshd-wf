@@ -1,0 +1,2 @@
+This placeholder file keeps the optional Clair3 model override input staged in Nextflow.
+Leave external Clair3 model params blank to use the bundled Clair3 model from the container image.

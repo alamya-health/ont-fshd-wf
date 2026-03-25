@@ -74,7 +74,6 @@ S3_PREFIX="$(normalize_prefix "${S3_PREFIX}")"
 VARIANT_FILES=(
   "${VARIANT_DIR}/hg38/hg38_no_alt.fa"
   "${VARIANT_DIR}/hg38/hg38_no_alt.fa.fai"
-  "${VARIANT_DIR}/clair3/r1041_e82_400bps_sup_v500.tar.gz"
   "${VARIANT_DIR}/clinvar/clinvar.vcf.gz"
   "${VARIANT_DIR}/clinvar/clinvar.vcf.gz.tbi"
   "${VARIANT_DIR}/snpeff/snpeff_hg38_data.tgz"
@@ -108,7 +107,9 @@ echo "Uploading FSHD bundle to ${S3_PREFIX}"
 
 upload_file "${VARIANT_DIR}/hg38/hg38_no_alt.fa" "${S3_PREFIX}variant/hg38/hg38_no_alt.fa"
 upload_file "${VARIANT_DIR}/hg38/hg38_no_alt.fa.fai" "${S3_PREFIX}variant/hg38/hg38_no_alt.fa.fai"
-upload_file "${VARIANT_DIR}/clair3/r1041_e82_400bps_sup_v500.tar.gz" "${S3_PREFIX}variant/clair3/r1041_e82_400bps_sup_v500.tar.gz"
+if [[ -f "${VARIANT_DIR}/clair3/r1041_e82_400bps_sup_v500.tar.gz" ]]; then
+  upload_file "${VARIANT_DIR}/clair3/r1041_e82_400bps_sup_v500.tar.gz" "${S3_PREFIX}variant/clair3/r1041_e82_400bps_sup_v500.tar.gz"
+fi
 upload_file "${VARIANT_DIR}/clinvar/clinvar.vcf.gz" "${S3_PREFIX}variant/clinvar/clinvar.vcf.gz"
 upload_file "${VARIANT_DIR}/clinvar/clinvar.vcf.gz.tbi" "${S3_PREFIX}variant/clinvar/clinvar.vcf.gz.tbi"
 upload_file "${VARIANT_DIR}/snpeff/snpeff_hg38_data.tgz" "${S3_PREFIX}variant/snpeff/snpeff_hg38_data.tgz"
