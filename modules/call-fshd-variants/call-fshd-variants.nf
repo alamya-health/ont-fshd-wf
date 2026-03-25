@@ -33,9 +33,21 @@ process CALL_FSHD_VARIANTS {
     mkdir -p "\${outdir}/clair3" "\${outdir}/refs" "\${outdir}/assets"
 
     tar -xzf "${clair3_model_tgz}" -C "\${outdir}/assets"
-    model_dir="\$(find "\${outdir}/assets" -mindepth 1 -maxdepth 3 -type d | sort | head -n 1)"
+    model_name="\$(basename "${clair3_model_tgz}" .tar.gz)"
+    model_dir=""
+    external_model_dir="\$(find "\${outdir}/assets" -mindepth 1 -maxdepth 4 -type f -name pileup.pt | sort | head -n 1 | xargs -r dirname)"
+    if [[ -n "\${external_model_dir}" && -f "\${external_model_dir}/full_alignment.pt" ]]; then
+      model_dir="\${external_model_dir}"
+    fi
     if [[ -z "\${model_dir}" ]]; then
-      echo "Unable to find extracted Clair3 model directory" >&2
+      bundled_model_dir="/opt/conda/bin/models/\${model_name}"
+      if [[ -f "\${bundled_model_dir}/pileup.pt" && -f "\${bundled_model_dir}/full_alignment.pt" ]]; then
+        model_dir="\${bundled_model_dir}"
+        echo "Using bundled Clair3 PyTorch model at \${model_dir}" >&2
+      fi
+    fi
+    if [[ -z "\${model_dir}" ]]; then
+      echo "Unable to find a Clair3 PyTorch model directory with pileup.pt and full_alignment.pt" >&2
       exit 1
     fi
 
