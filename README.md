@@ -125,45 +125,11 @@ DUCKS4 also calls directly the PAS-sequence to each read if pLAM is available an
 
 We've also implemented a lighter version without variant-calling: [ducks4_wovar](https://github.com/tamara-nano/ducks4_wovar)
 
-## Prerequisite
+## Legacy DUCKS4 packaging
 
-This project requires [Docker](https://docs.docker.com/get-docker/) to be installed on your system.
-Please follow the official installation instructions for your operating system.
+The original monolithic DUCKS4 Docker entrypoint is no longer maintained in this repository. This repo now supports the modular Nextflow workflow only, using the pinned per-module Dockerfiles under `modules/`.
 
-## Installation
-
-Pull docker image: 
-
-`docker pull ghcr.io/tamara-nano/fshd_ducks4:latest`
-
-or 
-
-Build image with dockerfile:
-
-download repository and unzip it \
-`cd /path/ducks4/`
-
-`docker build -t ghcr.io/tamara-nano/fshd_ducks4 .  `
-
-## Usage
-
-For running the tool:
-
-`docker run --rm -v $(pwd):/data ghcr.io/tamara-nano/fshd_ducks4:latest --input /data/mysample.bam --methyl --variant`
-
-For showing more infos:
-
-`docker run -it --rm -v $(pwd):/data ghcr.io/tamara-nano/fshd_ducks4:latest --help`
-
-| **tags** | **Infos** |
-|:-----------------------------|:-----------------------------------------|
-| --input | provide input-file. Best start with your basecalled SUP bam or fastq/fastq.gz-file. |
-| --methyl | optional, methylation calling with modkit, target region: chr4:193540172-193543634. |
-| --variant | optional, mapping to HG38, variant calling with clair3, sniffles2 (sniffles also calls against the T2T-aligned bam-file), phasing with whatshap and variant annotation with SNPEff and SnpSift against ClinVar (vv20250729). |
-| --threads | optional, set threads. |
-| --version | show program's version number and exit. |
-
-The output is saved in the folder where the original input file is located.
+The upstream DUCKS4 scripts are still kept here for biological and algorithmic reference, but the root-level monolith Dockerfile has been retired so it does not drift out of sync with the Tower workflow.
 
 ## DUCKS4 output
 
@@ -198,13 +164,9 @@ Therefore it is possible to get a methylation gradient-profile over the D4Z4-arr
 The results can then further be inspected in a genome viewer like the IGV-browser.
 
 ## Mode A: for creating a custom reference & calling methylation over the D4Z4-array within the custom reference
-`docker run --rm -v "$(pwd)":/data ghcr.io/tamara-nano/fshd_ducks4:latest id2bam2meth \
-  --id_ref xxxx-xxxx-xxx-xxxx \   # input read_id \
-  --bam_ref /data/sample.bam \
-  --blast_ref /data/DUCKS4_output/blast-results/...fshd-blast.txt or .../...reads_blast.csv \
-  --bam /data/sample.bam \
-  --txt /data/read-ids.txt \
-  --methyl 
+Historical upstream `id2bam2meth` example:
+
+`ducks4 id2bam2meth --id_ref xxxx-xxxx-xxx-xxxx --bam_ref /path/sample.bam --blast_ref /path/fshd-blast.txt --bam /path/sample.bam --txt /path/read-ids.txt --methyl`
 
 **Note**: \
 From the read-id a reference FASTA, FAIDX and annotation.bed file from the blast-output is created. \
@@ -213,13 +175,9 @@ Methylation is called over all regions from the annotation.bed if no other regio
 Therefore a methlyation-gradient over all D4Z4-RUs can be called and will be provided as .bedgraph output and for convenience as .bed file with values as labels.
 
 ## Mode B: providing an existing reference
-`docker run --rm -v "$(pwd)":/data ghcr.io/tamara-nano/fshd_ducks4:latest id2bam2meth \
-  --ref /data/ref.fasta \
-  --bam /data/sample.bam \
-  --txt /data/read-ids.txt \ 
-  --methyl \
-  --region chr:start-end \ OR
-  --regions_bed data/regions.bed
+Historical upstream `id2bam2meth` example:
+
+`ducks4 id2bam2meth --ref /path/ref.fasta --bam /path/sample.bam --txt /path/read-ids.txt --methyl --region chr:start-end`
 
 **Note**: \
 Methylation is called over the regions provided either as --region (one region) or --region_bed (several regions possible).
@@ -236,7 +194,7 @@ read-id5\
 
 ## For showing more infos:
 
-`docker run -it --rm -v $(pwd):/data ghcr.io/tamara-nano/fshd_ducks4:latest id2bam2meth --help`
+`ducks4 id2bam2meth --help`
 
 | **tags** | **Infos** |
 |:-----------------------------|:-----------------------------------------|

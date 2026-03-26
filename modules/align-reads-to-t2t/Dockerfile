@@ -2,7 +2,8 @@ FROM ubuntu:22.04
 
 ARG SAMTOOLS_VERSION=1.22.1
 ARG MINIMAP2_VERSION=2.28
-ARG MINIMAP2_TAG=v2.28
+ARG MINIMAP2_TAR=minimap2-${MINIMAP2_VERSION}.tar.bz2
+ARG MINIMAP2_URL=https://github.com/lh3/minimap2/releases/download/v${MINIMAP2_VERSION}/${MINIMAP2_TAR}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -12,7 +13,6 @@ RUN apt-get update \
        bzip2 \
        ca-certificates \
        gcc \
-       git \
        libc6-dev \
        libbz2-dev \
        libcurl4-openssl-dev \
@@ -26,10 +26,11 @@ RUN apt-get update \
        zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --branch "${MINIMAP2_TAG}" --depth 1 https://github.com/lh3/minimap2 /tmp/minimap2 \
-    && make -C /tmp/minimap2 \
-    && cp /tmp/minimap2/minimap2 /usr/local/bin/minimap2 \
-    && rm -rf /tmp/minimap2 \
+RUN wget -q "${MINIMAP2_URL}" -O "/tmp/${MINIMAP2_TAR}" \
+    && tar -xjf "/tmp/${MINIMAP2_TAR}" -C /tmp \
+    && make -C "/tmp/minimap2-${MINIMAP2_VERSION}" \
+    && cp "/tmp/minimap2-${MINIMAP2_VERSION}/minimap2" /usr/local/bin/minimap2 \
+    && rm -rf "/tmp/minimap2-${MINIMAP2_VERSION}" "/tmp/${MINIMAP2_TAR}" \
     && minimap2 --version
 
 RUN wget -q "https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2" \

@@ -37,3 +37,4 @@ bundle-staging/
 # OS/editor noise
 .DS_Store
 *.swp
+.claude/

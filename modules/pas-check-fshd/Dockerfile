@@ -1,5 +1,7 @@
 FROM ubuntu:22.04
 
+ARG PYSAM_VERSION=0.23.3
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -11,6 +13,6 @@ RUN apt-get update \
        python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir pysam
+RUN pip3 install --no-cache-dir "pysam==${PYSAM_VERSION}"
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]

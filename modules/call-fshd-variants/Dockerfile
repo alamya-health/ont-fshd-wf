@@ -1,7 +1,11 @@
-FROM hkubal/clair3:latest
+FROM hkubal/clair3:v2.0.0
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
+
+ARG SNIFFLES_VERSION=2.7.0
+ARG SNPEFF_VERSION=v4_3t
+ARG SNPEFF_URL=https://downloads.sourceforge.net/project/snpeff/snpEff_${SNPEFF_VERSION}_core.zip
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -12,10 +16,10 @@ RUN apt-get update \
        wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --no-cache-dir sniffles==2.7.0
+RUN python3 -m pip install --no-cache-dir "sniffles==${SNIFFLES_VERSION}"
 
 RUN mkdir -p /opt/snpeff \
-    && curl -fL https://snpeff-public.s3.amazonaws.com/versions/snpEff_latest_core.zip -o /tmp/snpeff.zip \
+    && curl -fL "${SNPEFF_URL}" -o /tmp/snpeff.zip \
     && unzip -q /tmp/snpeff.zip -d /tmp \
     && cp -a /tmp/snpEff/* /opt/snpeff/ \
     && rm -rf /tmp/snpeff.zip /tmp/snpEff \

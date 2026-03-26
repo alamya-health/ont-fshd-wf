@@ -4,6 +4,7 @@ ARG SAMTOOLS_VERSION=1.22.1
 ARG MODKIT_VERSION=v0.6.1
 ARG MODKIT_ASSET=modkit_${MODKIT_VERSION}_u16_x86_64.tar.gz
 ARG MODKIT_URL=https://github.com/nanoporetech/modkit/releases/download/${MODKIT_VERSION}/${MODKIT_ASSET}
+ARG PYSAM_VERSION=0.23.3
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -50,6 +51,6 @@ RUN set -eu; \
     rm -rf "$work"; \
     modkit --version
 
-RUN pip3 install --no-cache-dir pysam
+RUN pip3 install --no-cache-dir "pysam==${PYSAM_VERSION}"
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
