@@ -22,6 +22,10 @@ process CALL_FSHD_VARIANTS {
     """
     set -euo pipefail
 
+    log_step() {
+      echo "[CALL_FSHD_VARIANTS] \$*" >&2
+    }
+
     if [[ ! -f "${hg38_bam}.bai" ]]; then
       ln -sf "${hg38_bai}" "${hg38_bam}.bai"
     fi
@@ -79,6 +83,11 @@ process CALL_FSHD_VARIANTS {
     cp "${clinvar_vcf_gz}" "\${outdir}/refs/clinvar.vcf.gz"
     cp "${clinvar_vcf_tbi}" "\${outdir}/refs/clinvar.vcf.gz.tbi"
 
+    if [[ ! -f "${hg38_ref_fasta}.fai" ]]; then
+      log_step "Indexing HG38 FASTA for WhatsHap and downstream tools"
+      samtools faidx "${hg38_ref_fasta}"
+    fi
+
     total_reads="\$(samtools view -c "${hg38_bam}")"
     if [[ "\${total_reads}" -eq 0 ]]; then
       {
@@ -89,6 +98,7 @@ process CALL_FSHD_VARIANTS {
       exit 0
     fi
 
+    log_step "Running Clair3"
     run_clair3.sh \
       --bam_fn="${hg38_bam}" \
       --ref_fn="${hg38_ref_fasta}" \
@@ -110,6 +120,12 @@ process CALL_FSHD_VARIANTS {
       exit 1
     fi
 
+    if [[ ! -f "\${clair3_vcfgz}.tbi" ]]; then
+      log_step "Indexing Clair3 merged VCF for downstream WhatsHap/SnpSift steps"
+      tabix -f -p vcf "\${clair3_vcfgz}"
+    fi
+
+    log_step "Haplotagging HG38 BAM with WhatsHap"
     whatshap haplotag \
       -o "\${outdir}/${sample_id}.hg38.haplotagged.bam" \
       --reference "${hg38_ref_fasta}" \
@@ -119,24 +135,29 @@ process CALL_FSHD_VARIANTS {
       --output-haplotag-list "\${outdir}/${sample_id}.haplotag-list.tsv" \
       --output-threads=${task.cpus}
 
+    log_step "Indexing haplotagged HG38 BAM"
     samtools index -@ ${task.cpus} "\${outdir}/${sample_id}.hg38.haplotagged.bam"
 
+    log_step "Summarizing phased blocks with WhatsHap"
     whatshap stats \
       --gtf="\${outdir}/${sample_id}.haploblocks.gtf" \
       "\${clair3_vcfgz}" \
       > "\${outdir}/${sample_id}.whatshap.stats.txt"
 
+    log_step "Calling phased HG38 structural variants with Sniffles2"
     sniffles \
       --input "\${outdir}/${sample_id}.hg38.haplotagged.bam" \
       --vcf "\${outdir}/${sample_id}.hg38.sniffles2.phased.vcf" \
       --phase \
       --output-rnames
 
+    log_step "Calling T2T structural variants with Sniffles2"
     sniffles \
       --input "${t2t_bam}" \
       --vcf "\${outdir}/${sample_id}.t2t.sniffles2.vcf" \
       --output-rnames
 
+    log_step "Annotating Clair3 VCF with snpEff"
     java -Xmx4g -jar /opt/snpeff/snpEff.jar \
       -dataDir "\${snpeff_data_root}" \
       hg38 \
@@ -148,6 +169,7 @@ process CALL_FSHD_VARIANTS {
     bgzip -f "\${outdir}/${sample_id}.hg38.snpeff.vcf"
     tabix -f -p vcf "\${outdir}/${sample_id}.hg38.snpeff.vcf.gz"
 
+    log_step "Annotating snpEff VCF with ClinVar via SnpSift"
     java -Xmx2g -jar /opt/snpeff/SnpSift.jar \
       annotate -v \
       "\${outdir}/refs/clinvar.vcf.gz" \
@@ -159,6 +181,7 @@ process CALL_FSHD_VARIANTS {
 
     filter_expr="((ANN[*].GENE = 'DUX4') | (ANN[*].GENE = 'SMCHD1') | (ANN[*].GENE = 'LRIF1') | (ANN[*].GENE = 'DNMT3B') | (ANN[*].GENE = 'TRIM43') | (ANN[*].GENE = 'CAPN3') | (ANN[*].GENE = 'VCP') | (CLNDN =~ 'Facioscapulohumeral'))"
 
+    log_step "Filtering ClinVar/snpEff VCF to FSHD-relevant variants"
     java -Xmx2g -jar /opt/snpeff/SnpSift.jar \
       filter "\${filter_expr}" \
       "\${outdir}/${sample_id}.hg38.snpeff.clinvar.vcf.gz" \
@@ -167,6 +190,7 @@ process CALL_FSHD_VARIANTS {
     bgzip -f "\${outdir}/${sample_id}.fshd_relevant.vcf"
     tabix -f -p vcf "\${outdir}/${sample_id}.fshd_relevant.vcf.gz"
 
+    log_step "Writing FSHD variant summary"
     write_fshd_variant_summary.py \
       "${sample_id}" \
       "\${clair3_vcfgz}" \
