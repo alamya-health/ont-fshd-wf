@@ -248,13 +248,14 @@ workflow {
         .join(ch_locus_flagstat)
         .join(ch_locus_coverage)
         .join(ch_haplotag_summary)
+        .join(ch_methylation_dir)
         .join(ch_methylation_summary)
         .join(ch_variant_summary)
-        .map { sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_summary_tsv, variant_summary_tsv ->
-            tuple(sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_summary_tsv, variant_summary_tsv)
+        .map { sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_dir, methylation_summary_tsv, variant_summary_tsv ->
+            tuple(sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_dir, methylation_summary_tsv, variant_summary_tsv)
         }
 
-    BUILD_FSHD_REPORT( ch_report_input )
+    BUILD_FSHD_REPORT( ch_report_input, Channel.value(projectLocusBed) )
 
     ch_report_html = BUILD_FSHD_REPORT.out[0]
     ch_report_summary = BUILD_FSHD_REPORT.out[1]

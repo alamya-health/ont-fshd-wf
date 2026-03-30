@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OC195M FSHD report</title>
+  <style>
+    :root {
+      --ink: #2c1f18;
+      --paper: #fbf6ef;
+      --card: rgba(255,255,255,0.75);
+      --edge: rgba(93,62,39,0.18);
+      --accent: #c65d32;
+      --accent-soft: #efc7b3;
+      --teal: #2f7f73;
+      --gold: #b7852b;
+      --muted: #6f6259;
+      --shadow: 0 16px 40px rgba(108, 74, 48, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Georgia", "Iowan Old Style", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(226, 150, 113, 0.35), transparent 28%),
+        radial-gradient(circle at top right, rgba(78, 143, 133, 0.22), transparent 22%),
+        linear-gradient(180deg, #fdf8f3 0%, #f6efe6 100%);
+    }
+    .shell { max-width: 1220px; margin: 0 auto; padding: 36px 24px 48px; }
+    .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.82), rgba(250,235,220,0.82));
+      border: 1px solid var(--edge);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -100px -120px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(198,93,50,0.14), transparent 72%);
+    }
+    h1 { margin: 0 0 10px; font-size: 2.35rem; line-height: 1.05; }
+    h2 { margin: 0 0 14px; font-size: 1.2rem; letter-spacing: 0.02em; }
+    p { line-height: 1.55; }
+    .lede { max-width: 840px; font-size: 1.08rem; color: #3c2c22; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      background: rgba(198, 93, 50, 0.12);
+      color: #8d3b17;
+      border: 1px solid rgba(198, 93, 50, 0.18);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 22px;
+    }
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--edge);
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .metric-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .metric-value { font-size: 2rem; margin-top: 8px; font-weight: 700; }
+    .metric-note { margin-top: 6px; color: var(--muted); font-size: 0.92rem; }
+    .section {
+      margin-top: 26px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--edge);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
+    }
+    .muted { color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 0.95rem;
+      background: rgba(255,255,255,0.65);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(93,62,39,0.12);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: rgba(191,153,117,0.10); }
+    tr:last-child td { border-bottom: 0; }
+    .compact td, .compact th { padding: 8px 10px; font-size: 0.9rem; }
+    .histogram { width: 100%; height: auto; background: rgba(255,250,246,0.82); border-radius: 18px; border: 1px solid rgba(93,62,39,0.10); }
+    .histogram .title { font-size: 16px; fill: #4b3628; font-weight: 700; }
+    .histogram .axis { font-size: 12px; fill: #6f6259; }
+    .histogram .count { font-size: 12px; fill: #4b3628; }
+    .callout {
+      border-left: 5px solid var(--accent);
+      background: rgba(198,93,50,0.08);
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="badge">FSHD D4Z4 / DUX4 profiling</div>
+      <h1>OC195M</h1>
+      <p class="lede">Partial 4qA evidence was observed, but no complete 4qA-spanning read was classified.</p>
+      <p class="muted"><strong>Locus BAM flagstat:</strong> 8486 + 0 in total (QC-passed reads + QC-failed reads)</p>
+      <div class="grid">
+        <div class='metric'><div class='metric-label'>4qA complete reads</div><div class='metric-value'>0</div><div class='metric-note'>Shortest RU: NA</div></div>
+        <div class='metric'><div class='metric-label'>4qA all reads</div><div class='metric-value'>56</div><div class='metric-note'>Permissive haplotype evidence</div></div>
+        <div class='metric'><div class='metric-label'>4qB complete reads</div><div class='metric-value'>0</div><div class='metric-note'>Non-permissive chr4 haplotype</div></div>
+        <div class='metric'><div class='metric-label'>chr10 complete reads</div><div class='metric-value'>0</div><div class='metric-note'>Homologous reference reads</div></div>
+        <div class='metric'><div class='metric-label'>Chimeric reads</div><div class='metric-value'>0</div><div class='metric-note'>Potential rearrangements or hybrids</div></div>
+        <div class='metric'><div class='metric-label'>Dominant 4qA HP</div><div class='metric-value'>UNSET</div><div class='metric-note'>When HP tags are present</div></div>
+        <div class='metric'><div class='metric-label'>Variant branch</div><div class='metric-value'>ready</div><div class='metric-note'>Relevant genes: C9orf131-VCP,CAPN3,CBX3P2,CBX3P2-SMCHD1,CD53-LRIF1,COMMD7-DNMT3B,DBET-DUX4,DNMT3B,DNMT3B-MAPRE1,DUX4,DUX4-CHR_END,FANCG,FRG2B-DUX4,GANC,GANC-CAPN3,LRIF1,LRIF1-DRAM2,NDC80-CBX3P2,SMCHD1,SMCHD1-EMILIN2,TRIM43,TRIM43-LINC00342,TRIM43B-TRIM43,VCP,ZNF106</div></div>
+      </div>
+      <div class="callout">
+        <strong>PAS summary:</strong> No complete 4qA PAS assignments available.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Repeat Unit Distributions</h2>
+      <div class="section-grid">
+        <div><p class='muted'>No repeat-unit measurements available.</p></div>
+        <div><p class='muted'>No repeat-unit measurements available.</p></div>
+        <div><p class='muted'>No repeat-unit measurements available.</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Top 4qA Complete Reads</h2>
+      <p class='muted'>No rows available.</p>
+    </section>
+
+    <section class="section">
+      <h2>Chimeric Read Highlights</h2>
+      <p class='muted'>No rows available.</p>
+    </section>
+
+    <section class="section">
+      <h2>Subset and Coverage Tracking</h2>
+      <div class="section-grid">
+        <div>
+          <h3>Classified subsets</h3>
+          <table class='compact'><thead><tr><th>Subset</th><th>Read IDs</th><th>Status</th></tr></thead><tbody><tr><td>4qA_all</td><td>56</td><td>ready</td></tr><tr><td>4qA_complete</td><td>0</td><td>missing_or_empty</td></tr><tr><td>4qB_all</td><td>32</td><td>ready</td></tr><tr><td>4qB_complete</td><td>0</td><td>missing_or_empty</td></tr><tr><td>chimeric</td><td>0</td><td>missing_or_empty</td></tr><tr><td>chr10_all</td><td>103</td><td>ready</td></tr><tr><td>chr10_complete</td><td>0</td><td>missing_or_empty</td></tr><tr><td>chr4_undefined</td><td>2</td><td>ready</td></tr><tr><td>D4Z4_chr4_only</td><td>456</td><td>ready</td></tr><tr><td>D4Z4_chr10_only</td><td>336</td><td>ready</td></tr></tbody></table>
+        </div>
+        <div>
+          <h3>Coverage over target intervals</h3>
+          <table class='compact'><thead><tr><th>Region</th><th>Start</th><th>End</th><th>Reads</th><th>Covered bp</th><th>Breadth</th><th>Mean depth</th></tr></thead><tbody><tr><td>chr4</td><td>193376059</td><td>193584945</td><td>DUX4_region</td><td>1154</td><td>194897</td><td>93.303</td></tr><tr><td>chr4</td><td>193389408</td><td>193390883</td><td>CTRL_D4Z4_chr4</td><td>73</td><td>1475</td><td>100</td></tr><tr><td>chr4</td><td>193430066</td><td>193430226</td><td>SSLP_chr4</td><td>55</td><td>160</td><td>100</td></tr><tr><td>chr4</td><td>193430944</td><td>193431134</td><td>CLUHP4_201_exon1_chr4</td><td>58</td><td>190</td><td>100</td></tr><tr><td>chr4</td><td>193432867</td><td>193433355</td><td>D4F104S1_4q</td><td>52</td><td>488</td><td>100</td></tr><tr><td>chr4</td><td>193432631</td><td>193439285</td><td>D4Z4_4q35</td><td>66</td><td>6654</td><td>100</td></tr><tr><td>chr4</td><td>193541566</td><td>193553191</td><td>DUX4_gene_body_chr4</td><td>69</td><td>11625</td><td>100</td></tr><tr><td>chr4</td><td>193543409</td><td>193543649</td><td>pLAM_4qA</td><td>26</td><td>240</td><td>100</td></tr><tr><td>chr4</td><td>193552567</td><td>193553166</td><td>DUX4_end_chr4</td><td>37</td><td>599</td><td>100</td></tr><tr><td>chr10</td><td>134568643</td><td>134569770</td><td>CTRL_D4Z4_chr10</td><td>43</td><td>1127</td><td>100</td></tr><tr><td>chr10</td><td>134602038</td><td>134747455</td><td>DUX4_homologue_chr10</td><td>744</td><td>128201</td><td>88.1609</td></tr><tr><td>chr10</td><td>134612552</td><td>134612715</td><td>SSLP_chr10</td><td>56</td><td>163</td><td>100</td></tr><tr><td>chr10</td><td>134613434</td><td>134613624</td><td>CLUHP4_201_exon1_chr10</td><td>55</td><td>190</td><td>100</td></tr><tr><td>chr10</td><td>134615356</td><td>134615844</td><td>D4F104S1_10q</td><td>75</td><td>488</td><td>100</td></tr><tr><td>chr10</td><td>134726332</td><td>134726572</td><td>pLAM_10qA</td><td>41</td><td>240</td><td>100</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Haplotags and Methylation</h2>
+      <div class="section-grid">
+        <div>
+          <h3>HP tag breakdown</h3>
+          <p class="muted">HP tags detected: false</p>
+          <table class='compact'><thead><tr><th>Subset</th><th>HP</th><th>Count</th><th>Total subset reads</th></tr></thead><tbody><tr><td>4qA_all</td><td>UNSET</td><td>56</td><td>56</td></tr><tr><td>4qA_complete</td><td>UNSET</td><td>0</td><td>0</td></tr><tr><td>4qB_all</td><td>UNSET</td><td>32</td><td>32</td></tr><tr><td>4qB_complete</td><td>UNSET</td><td>0</td><td>0</td></tr><tr><td>chimeric</td><td>UNSET</td><td>0</td><td>0</td></tr><tr><td>chr10_all</td><td>UNSET</td><td>103</td><td>103</td></tr><tr><td>chr10_complete</td><td>UNSET</td><td>0</td><td>0</td></tr></tbody></table>
+        </div>
+        <div>
+          <h3>Repaired methylation summary</h3>
+          <table class='compact'><thead><tr><th>Subset</th><th>Status</th><th>Mean % modified</th><th>Subset reads</th><th>Donor reads</th></tr></thead><tbody><tr><td>4qA_all</td><td>ready</td><td>80.530</td><td>56</td><td>56</td></tr><tr><td>4qA_complete</td><td>missing_subset_bam</td><td>NA</td><td>0</td><td>0</td></tr><tr><td>chimeric</td><td>missing_subset_bam</td><td>NA</td><td>0</td><td>0</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Variant Calling</h2>
+      <p class="muted">HG38 realignment, Clair3 phasing, Whatshap haplotagging, Sniffles2 structural variant calling, and ClinVar/snpEff filtering for FSHD-relevant loci.</p>
+      <table class='compact'><thead><tr><th>Status</th><th>Clair3 calls</th><th>Relevant SNV/indels</th><th>ClinVar FSHD hits</th><th>HG38 SVs</th><th>T2T SVs</th><th>Genes</th></tr></thead><tbody><tr><td>ready</td><td>5412052</td><td>1181</td><td>9</td><td>24743</td><td>26206</td><td>C9orf131-VCP,CAPN3,CBX3P2,CBX3P2-SMCHD1,CD53-LRIF1,COMMD7-DNMT3B,DBET-DUX4,DNMT3B,DNMT3B-MAPRE1,DUX4,DUX4-CHR_END,FANCG,FRG2B-DUX4,GANC,GANC-CAPN3,LRIF1,LRIF1-DRAM2,NDC80-CBX3P2,SMCHD1,SMCHD1-EMILIN2,TRIM43,TRIM43-LINC00342,TRIM43B-TRIM43,VCP,ZNF106</td></tr></tbody></table>
+    </section>
+  </div>
+</body>
+</html>

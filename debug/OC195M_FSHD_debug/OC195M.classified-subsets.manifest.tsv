@@ -1,0 +1,11 @@
+subset_name	id_file	bam_path	read_count	status
+4qA_all	4qA_all-reads-ID.txt	OC195M.classified-subsets/OC195M.4qA_all.bam	56	ready
+4qA_complete	4qA_complete-reads-ID.txt	NA	0	missing_or_empty
+4qB_all	4qB_all-reads-ID.txt	OC195M.classified-subsets/OC195M.4qB_all.bam	32	ready
+4qB_complete	4qB_complete-reads-ID.txt	NA	0	missing_or_empty
+chimeric	chimeric-reads-ID.txt	NA	0	missing_or_empty
+chr10_all	chr10_all-reads-ID.txt	OC195M.classified-subsets/OC195M.chr10_all.bam	103	ready
+chr10_complete	chr10_complete-reads-ID.txt	NA	0	missing_or_empty
+chr4_undefined	chr4-undefined_all-reads-ID.txt	OC195M.classified-subsets/OC195M.chr4_undefined.bam	2	ready
+D4Z4_chr4_only	D4Z4-only_chr4-reads-ID.txt	OC195M.classified-subsets/OC195M.D4Z4_chr4_only.bam	456	ready
+D4Z4_chr10_only	D4Z4-only_chr10-reads-ID.txt	OC195M.classified-subsets/OC195M.D4Z4_chr10_only.bam	336	ready

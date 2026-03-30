@@ -1,0 +1,4 @@
+subset_name	status	subset_read_count	donor_read_count	mean_percent_modified	pileup_bed_gz	stats_tsv	repaired_bam
+4qA_all	ready	56	56	80.530	OC195M.methylation/4qA_all.methyl.bed.gz	OC195M.methylation/4qA_all.stats.tsv	OC195M.methylation/4qA_all.repaired.bam
+4qA_complete	missing_subset_bam	0	0	NA	NA	NA	NA
+chimeric	missing_subset_bam	0	0	NA	NA	NA	NA
