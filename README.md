@@ -24,7 +24,6 @@ The current modular conversion focuses on:
 - PAS assignment
 - Classified subset BAM generation
 - Optional repaired methylation profiling using `modkit repair`
-- Optional HG38-based FSHD variant calling with Clair3, Whatshap, Sniffles2, ClinVar, and snpEff
 - A polished per-sample HTML report plus cohort summary
 
 The original monolithic DUCKS4 Python/R entrypoint is still present for reference, but it is no longer the recommended interface for production use in this repo.
@@ -75,42 +74,20 @@ bash scripts/run_workflow_tests.sh
 The stub test script exercises both:
 
 - unaligned-BAM input mode
-- aligned-BAM input mode with variant calling enabled
+- aligned-BAM input mode
 
-## Variant-calling assets for S3
+## Reference assets for S3
 
-The modular variant branch is designed so the large immutable assets can live outside the container images, ideally in S3 and referenced by params:
+The current modular workflow only requires the T2T reference assets outside the container images:
 
-- `--hg38_ref_fasta`
-- `--hg38_ref_mmi` (optional)
-- `--clair3_model_name` (defaults to the bundled Clair3 container model)
-- `--clair3_model_path` (optional external override)
-- `--clinvar_vcf_gz`
-- `--clinvar_vcf_tbi`
-- `--snpeff_data_tgz`
-
-Recommended packaging:
-
-- `clair3_model_name`: bundled Clair3 v2 model name inside the Clair3 container, default `r1041_e82_400bps_sup_v500`
-- `clair3_model_path`: optional directory or `.tar.gz` archive containing a Clair3 v2 model with `pileup.pt` and `full_alignment.pt`
-- `snpeff_data_tgz`: tarball that extracts to a structure containing `data/hg38`
-- `scripts/fetch_variant_assets.sh /tmp/ont-fshd-variant-assets`: reproducibly stages the HG38, ClinVar, and snpEff assets listed above. Set `FETCH_CLAIR3_MODEL=1` only if you explicitly want to stage an external Clair3 model override.
 - `scripts/fetch_t2t_assets.sh /tmp/ont-fshd-t2t-assets`: reproducibly stages `chm13v2.0.fa`, `chm13v2.0.fa.fai`, and a prebuilt `chm13v2.0.mmi` index for S3 hosting
-- `scripts/push_fshd_bundle_to_s3.sh --dry-run`: previews upload of the staged variant and T2T bundles to `s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/`
-
-By default, the workflow now uses the bundled Clair3 container model and does not require an external Clair3 asset in S3. The older `--clair3_model_tgz` param is still accepted as a deprecated alias for an external override archive.
+- `scripts/push_fshd_bundle_to_s3.sh --dry-run`: previews upload of the staged T2T bundle to `s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/`
 
 Alignment notes:
 
 - uBAM inputs are merged with `samtools merge -u` and validated with `samtools quickcheck -u -v`, which avoids false failures on unmapped BAMs with no `@SQ` targets
 - alignments preserve `MM` and `ML` tags onto the aligned BAM by passing them through `samtools fastq -T MM,ML` and restoring them with `minimap2 -y`
 - the workflow aligns against the FASTA by default, but it can use optional `.mmi` references if you decide to provide them later
-
-Enable the branch with:
-
-```bash
---run_variant_calling true
-```
 
 ## Legacy DUCKS4 notes
 
@@ -127,7 +104,7 @@ We've also implemented a lighter version without variant-calling: [ducks4_wovar]
 
 ## Legacy DUCKS4 packaging
 
-The original monolithic DUCKS4 Docker entrypoint is no longer maintained in this repository. This repo now supports the modular Nextflow workflow only, using the pinned per-module Dockerfiles under `modules/`.
+The original monolithic DUCKS4 Docker entrypoint is no longer maintained in this repository. This repo now supports the modular Nextflow workflow only, using the pinned per-module Dockerfiles under `modules/`. The active Nextflow workflow is intentionally focused on T2T-based repeat sizing, haplotype/PAS interpretation, and methylation profiling, and does not run the old HG38 SNV/indel annotation branch.
 
 The upstream DUCKS4 scripts are still kept here for biological and algorithmic reference, but the root-level monolith Dockerfile has been retired so it does not drift out of sync with the Tower workflow.
 
@@ -142,8 +119,6 @@ DUCKS4 gives following output:
 -   sorted and indexed alignment.bam of all reads aligned to T2T-chm13v2.0
 -   coverage.txt: coverage-infos for the alignment.bam called via samtools coverage, Coverage is calculated in the region chr4:192667301-192902247 upstream of the D4Z4-array.
 -   folder with methylation-statistics and bed-methyl files for the 4qA haplotype and chimeric reads called with modkit.
--   folder with variant-calling results from clair3 and sniffles2 and annotated vcf.files (SNPEff and SnpSift against Clinvar database)
--   if variant calling is performed: haplotagged, sorted and index HG38 bam file for variant analysis
 -   folder with original blast-results in csv-files, whereas the blast-output is also sorted to haplotypes
 
 We recommend using the tables alongside with viewing the bam-files in a genome viewer like IGV-browser.

@@ -38,3 +38,21 @@ bundle-staging/
 .DS_Store
 *.swp
 .claude/
+
+# Local Python cache
+.pycache/
+
+# Local debug/report refresh artifacts
+debug/
+report_refresh/
+
+# Local Nextflow/dev outputs
+.test/
+.dev/
+.nextflow*
+out/
+work/
+
+# macOS noise
+.DS_Store
+

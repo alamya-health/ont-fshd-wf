@@ -7,8 +7,9 @@ process BUILD_FSHD_REPORT {
   publishDir "${params.output_dir}/build-fshd-report/${sample_id}", mode: 'copy', overwrite: true
 
   input:
-    tuple val(sample_id), path(classification_dir), path(subset_dir), path(flagstat_txt), path(coverage_tsv), path(haplotag_summary_tsv), path(methylation_dir), path(methylation_summary_tsv), path(variant_summary_tsv)
+    tuple val(sample_id), path(classification_dir), path(subset_dir), path(flagstat_txt), path(coverage_tsv), path(haplotag_summary_tsv), path(methylation_dir), path(methylation_summary_tsv)
     path locus_bed
+    path methylation_bed
 
   output:
     tuple val(sample_id), path("${sample_id}.fshd.report.html")
@@ -27,9 +28,9 @@ process BUILD_FSHD_REPORT {
       "${haplotag_summary_tsv}" \
       "${methylation_dir}" \
       "${methylation_summary_tsv}" \
-      "${variant_summary_tsv}" \
       "${params.contraction_threshold_ru}" \
       "${locus_bed}" \
+      "${methylation_bed}" \
       "${sample_id}.fshd.report.html" \
       "${sample_id}.fshd.report.summary.tsv"
     """
@@ -45,8 +46,8 @@ process BUILD_FSHD_REPORT {
 EOF
 
     cat <<'EOF' > "${sample_id}.fshd.report.summary.tsv"
-sample_id	contraction_status	haplotype_status	methylation_status	variant_status
-stub	stub	stub	stub	stub
+sample_id	contraction_status	haplotype_status	methylation_status
+stub	stub	stub	stub
 EOF
     """
 }

@@ -22,6 +22,16 @@
           "type": "string",
           "description": "Single-sample identifier when not using a samplesheet."
         },
+        "report_only": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip alignment/classification/calling and rebuild the HTML report from an existing published workflow output tree."
+        },
+        "report_only_input_root": {
+          "type": "string",
+          "format": "path",
+          "description": "Root directory or object-store prefix of an existing ont-fshd-wf output tree to use when report_only is enabled."
+        },
         "reuse_input_t2t_alignment": {
           "type": "boolean",
           "default": false,
@@ -65,7 +75,7 @@
         "t2t_ref_mmi": {
           "type": "string",
           "format": "path",
-          "description": "Optional T2T minimap2 MMI index for faster alignment startup. Leave blank to align directly against the FASTA.",
+          "description": "Optional prebuilt T2T minimap2 MMI index. Leave blank to have the workflow build and publish a reusable MMI from the FASTA once per run.",
           "default": ""
         },
         "blast_db_dir": {
@@ -82,7 +92,12 @@
         "methylation_regions_bed": {
           "type": "string",
           "format": "path",
-          "description": "BED file for methylation summarization on T2T coordinates."
+          "description": "BED file for summary methylation interpretation on T2T coordinates."
+        },
+        "methylation_pileup_bed": {
+          "type": "string",
+          "format": "path",
+          "description": "BED file describing the broader D4Z4 regions to include in modkit pileup for repeat-resolved methylation visualization."
         }
       }
     },
@@ -96,11 +111,6 @@
           "default": true,
           "description": "Attempt modkit-based methylation profiling after repairing MM/ML tags onto the T2T-aligned subset BAMs."
         },
-        "run_variant_calling": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable HG38-based Clair3, Whatshap, Sniffles2, and ClinVar/snpEff annotation for FSHD-relevant variant calling."
-        },
         "contraction_threshold_ru": {
           "type": "integer",
           "default": 10,
@@ -110,71 +120,53 @@
         "minimap2_preset": {
           "type": "string",
           "default": "lr:hq",
-          "description": "Minimap2 preset used when aligning BAM/uBAM reads to T2T or HG38."
+          "description": "Minimap2 preset used when aligning BAM/uBAM reads to T2T."
+        },
+        "align_bam2fq_threads": {
+          "type": "integer",
+          "default": 1,
+          "minimum": 1,
+          "description": "CPU threads used for BAM-to-FASTQ conversion before T2T alignment."
+        },
+        "align_map_threads": {
+          "type": "integer",
+          "default": 8,
+          "minimum": 1,
+          "description": "CPU threads reserved for minimap2 during T2T alignment."
+        },
+        "align_sort_threads": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "description": "CPU threads reserved for samtools sort/index after T2T alignment."
+        },
+        "align_minimap_batch": {
+          "type": "string",
+          "default": "1G",
+          "description": "Minimap2 -K batch size. Larger batches can improve CPU utilization at the cost of additional RAM."
+        },
+        "methylation_sort_threads": {
+          "type": "integer",
+          "default": 4,
+          "minimum": 1,
+          "description": "CPU threads used for samtools sorting/indexing during methylation repair and pileup prep."
+        },
+        "methylation_pileup_threads": {
+          "type": "integer",
+          "default": 8,
+          "minimum": 1,
+          "description": "CPU threads used by modkit pileup."
+        },
+        "methylation_interval_size": {
+          "type": "integer",
+          "default": 250000,
+          "minimum": 1000,
+          "description": "Modkit pileup interval size for region-parallel processing. Smaller values can help on compact high-depth loci."
         },
         "profile_fshd_methylation_image_tag": {
           "type": "string",
           "default": "",
           "description": "Optional ECR tag override for PROFILE_FSHD_METHYLATION only. Leave blank to use the global image_tag."
-        },
-        "call_fshd_variants_image_tag": {
-          "type": "string",
-          "default": "",
-          "description": "Optional ECR tag override for CALL_FSHD_VARIANTS only. Leave blank to use the global image_tag."
-        }
-      }
-    },
-    "variant_assets": {
-      "title": "Variant Assets",
-      "type": "object",
-      "fa_icon": "fas fa-database",
-      "properties": {
-        "hg38_ref_fasta": {
-          "type": "string",
-          "format": "path",
-          "description": "HG38 no-alt reference FASTA for variant calling.",
-          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/hg38/hg38_no_alt.fa"
-        },
-        "hg38_ref_mmi": {
-          "type": "string",
-          "format": "path",
-          "description": "Optional HG38 minimap2 MMI index for faster alignment startup in the variant branch. Leave blank to align directly against the FASTA.",
-          "default": ""
-        },
-        "clair3_model_name": {
-          "type": "string",
-          "description": "Bundled Clair3 model name to use from the Clair3 container when no external override is provided.",
-          "default": "r1041_e82_400bps_sup_v500"
-        },
-        "clair3_model_path": {
-          "type": "string",
-          "format": "path",
-          "description": "Optional external Clair3 v2 model override. Provide either a directory containing pileup.pt/full_alignment.pt or a .tar.gz archive of that directory. Leave blank to use the bundled Clair3 model.",
-          "default": ""
-        },
-        "clair3_model_tgz": {
-          "type": "string",
-          "format": "path",
-          "description": "Deprecated alias for an external Clair3 model archive. Leave blank to use the bundled Clair3 model.",
-          "default": ""
-        },
-        "clinvar_vcf_gz": {
-          "type": "string",
-          "format": "path",
-          "description": "ClinVar VCF.gz used for annotation.",
-          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/clinvar/clinvar.vcf.gz"
-        },
-        "clinvar_vcf_tbi": {
-          "type": "string",
-          "format": "path",
-          "description": "Tabix index for the ClinVar VCF.gz.",
-          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/clinvar/clinvar.vcf.gz.tbi"
-        },
-        "snpeff_data_tgz": {
-          "type": "string",
-          "format": "path",
-          "description": "Tarball containing snpEff data with a hg38 database under data/hg38.",
-          "default": "s3://alamyasingapore-nus-lab-production-processing/reference-genome-and-databases/FSHD_Bundle/variant/snpeff/snpeff_hg38_data.tgz"
         }
       }
     },
@@ -203,9 +195,6 @@
     },
     {
       "$ref": "#/definitions/analysis"
-    },
-    {
-      "$ref": "#/definitions/variant_assets"
     },
     {
       "$ref": "#/definitions/output"

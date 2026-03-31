@@ -38,17 +38,9 @@ UBAM="${INPUT_DIR}/ubam_dir/TEST_STUB.part1.bam"
 ALIGNED_BAM="${INPUT_DIR}/aligned/TEST_STUB.t2t.bam"
 ALIGNED_BAI="${INPUT_DIR}/aligned/TEST_STUB.t2t.bam.bai"
 T2T_FASTA="${INPUT_DIR}/refs/chm13v2.0.fa"
-HG38_FASTA="${INPUT_DIR}/refs/hg38_no_alt.fa"
-CLINVAR_VCF="${INPUT_DIR}/assets/clinvar.vcf.gz"
-CLINVAR_TBI="${INPUT_DIR}/assets/clinvar.vcf.gz.tbi"
-SNPEFF_TGZ="${INPUT_DIR}/assets/snpeff_hg38_data.tgz"
 
-touch "${UBAM}" "${ALIGNED_BAM}" "${ALIGNED_BAI}" "${CLINVAR_VCF}" "${CLINVAR_TBI}" "${SNPEFF_TGZ}"
+touch "${UBAM}" "${ALIGNED_BAM}" "${ALIGNED_BAI}"
 cat > "${T2T_FASTA}" <<'EOF'
->chr4
-ACGTACGTACGTACGTACGTACGTACGTACGT
-EOF
-cat > "${HG38_FASTA}" <<'EOF'
 >chr4
 ACGTACGTACGTACGTACGTACGTACGTACGT
 EOF
@@ -61,14 +53,12 @@ process {
   withName: 'MERGE_UNALIGNED_BAMS' { cpus = 1; memory = 1.GB }
   withName: 'ALIGN_READS_TO_T2T' { cpus = 1; memory = 1.GB }
   withName: 'EXTRACT_FSHD_LOCUS' { cpus = 1; memory = 1.GB }
-  withName: 'ALIGN_READS_TO_HG38' { cpus = 1; memory = 1.GB }
   withName: 'BLAST_FSHD_READS' { cpus = 1; memory = 1.GB }
   withName: 'PAS_CHECK_FSHD' { cpus = 1; memory = 1.GB }
   withName: 'CLASSIFY_FSHD_READS' { cpus = 1; memory = 1.GB }
   withName: 'EXTRACT_CLASSIFIED_READ_SUBSETS' { cpus = 1; memory = 1.GB }
   withName: 'SUMMARIZE_HAPLOTAGS' { cpus = 1; memory = 1.GB }
   withName: 'PROFILE_FSHD_METHYLATION' { cpus = 1; memory = 1.GB }
-  withName: 'CALL_FSHD_VARIANTS' { cpus = 1; memory = 1.GB }
   withName: 'BUILD_FSHD_REPORT' { cpus = 1; memory = 1.GB }
   withName: 'SUMMARIZE_COHORT' { cpus = 1; memory = 1.GB }
 }
@@ -101,11 +91,6 @@ run_stub() {
       --input_aligned_bam "${ALIGNED_BAM}"
       --input_aligned_bai "${ALIGNED_BAI}"
       --reuse_input_t2t_alignment false
-      --run_variant_calling true
-      --hg38_ref_fasta "${HG38_FASTA}"
-      --clinvar_vcf_gz "${CLINVAR_VCF}"
-      --clinvar_vcf_tbi "${CLINVAR_TBI}"
-      --snpeff_data_tgz "${SNPEFF_TGZ}"
     )
   fi
 
@@ -116,15 +101,14 @@ run_stub() {
 }
 
 run_stub "ubam"
-run_stub "aligned_variant"
+run_stub "aligned"
 
 required_outputs=(
   "${TEST_ROOT}/results_ubam/build-fshd-report/TEST_UBAM/TEST_UBAM.fshd.report.html"
   "${TEST_ROOT}/results_ubam/build-fshd-report/TEST_UBAM/TEST_UBAM.fshd.report.summary.tsv"
   "${TEST_ROOT}/results_ubam/summarize-cohort/cohort.fshd.summary.html"
-  "${TEST_ROOT}/results_aligned_variant/build-fshd-report/TEST_ALIGNED_VARIANT/TEST_ALIGNED_VARIANT.fshd.report.html"
-  "${TEST_ROOT}/results_aligned_variant/call-fshd-variants/TEST_ALIGNED_VARIANT/TEST_ALIGNED_VARIANT.variant.summary.tsv"
-  "${TEST_ROOT}/results_aligned_variant/summarize-cohort/cohort.fshd.summary.tsv"
+  "${TEST_ROOT}/results_aligned/build-fshd-report/TEST_ALIGNED/TEST_ALIGNED.fshd.report.html"
+  "${TEST_ROOT}/results_aligned/summarize-cohort/cohort.fshd.summary.tsv"
 )
 
 for f in "${required_outputs[@]}"; do
@@ -137,4 +121,4 @@ done
 echo "Workflow stub tests passed."
 echo "Outputs:"
 echo "  ${TEST_ROOT}/results_ubam"
-echo "  ${TEST_ROOT}/results_aligned_variant"
+echo "  ${TEST_ROOT}/results_aligned"
