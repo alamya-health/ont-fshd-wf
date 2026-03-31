@@ -137,7 +137,7 @@ workflow {
 
     if( params.report_only ) {
         def reportRoot = params.report_only_input_root.toString().trim().replaceAll('/+$', '')
-        ch_report_input = ch_samples_meta.map { sid, row ->
+        ch_report_static = ch_samples_meta.map { sid, row ->
             def classification_dir = file("${reportRoot}/classify-fshd-reads/${sid}/${sid}.fshd.classification")
             def subset_dir = file("${reportRoot}/extract-classified-read-subsets/${sid}/${sid}.classified-subsets")
             def flagstat_txt = file("${reportRoot}/extract-fshd-locus/${sid}/${sid}.fshd.locus.flagstat.txt")
@@ -146,6 +146,38 @@ workflow {
             def methylation_dir = file("${reportRoot}/profile-fshd-methylation/${sid}/${sid}.methylation")
             def methylation_summary_tsv = file("${reportRoot}/profile-fshd-methylation/${sid}/${sid}.methylation.summary.tsv")
             tuple(sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_dir, methylation_summary_tsv)
+        }
+
+        if( params.report_only_run_methylation ) {
+            ch_report_methylation_input = ch_samples_meta.map { sid, row ->
+                def subset_dir = file("${reportRoot}/extract-classified-read-subsets/${sid}/${sid}.classified-subsets")
+                def explicitOriginal = getString(row, 'report_only_original_bam', params.report_only_original_bam)
+                def originalBam = explicitOriginal ? file(explicitOriginal) : file("${reportRoot}/merge-unaligned-bams/${sid}/${sid}.input.bam")
+                if( !originalBam.exists() ) {
+                    throw new IllegalArgumentException("Report-only methylation rerun requires an original donor BAM for sample '${sid}'. Set --report_only_original_bam or ensure ${reportRoot}/merge-unaligned-bams/${sid}/${sid}.input.bam exists.")
+                }
+                tuple(sid, originalBam, subset_dir)
+            }
+
+            PROFILE_FSHD_METHYLATION(
+                ch_report_methylation_input,
+                Channel.value(file(params.t2t_ref_fasta.toString())),
+                Channel.value(projectMethylBed),
+                Channel.value(projectMethylPileupBed)
+            )
+
+            ch_report_input = ch_report_static
+                .map { sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_dir, methylation_summary_tsv ->
+                    tuple(sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv)
+                }
+                .join(PROFILE_FSHD_METHYLATION.out[0])
+                .join(PROFILE_FSHD_METHYLATION.out[1])
+                .map { sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_dir, methylation_summary_tsv ->
+                    tuple(sid, classification_dir, subset_dir, flagstat_txt, coverage_tsv, haplotag_summary_tsv, methylation_dir, methylation_summary_tsv)
+                }
+        }
+        else {
+            ch_report_input = ch_report_static
         }
 
         BUILD_FSHD_REPORT( ch_report_input, Channel.value(projectLocusBed), Channel.value(projectMethylBed) )

@@ -32,6 +32,16 @@
           "format": "path",
           "description": "Root directory or object-store prefix of an existing ont-fshd-wf output tree to use when report_only is enabled."
         },
+        "report_only_run_methylation": {
+          "type": "boolean",
+          "default": false,
+          "description": "When report_only is enabled, rerun PROFILE_FSHD_METHYLATION from the existing published subset BAMs before rebuilding the report."
+        },
+        "report_only_original_bam": {
+          "type": "string",
+          "format": "path",
+          "description": "Optional donor/original BAM to use when report_only_run_methylation is enabled. If blank, the workflow will try merge-unaligned-bams/<sample>/<sample>.input.bam under report_only_input_root."
+        },
         "reuse_input_t2t_alignment": {
           "type": "boolean",
           "default": false,

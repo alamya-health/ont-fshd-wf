@@ -103,12 +103,32 @@ run_stub() {
 run_stub "ubam"
 run_stub "aligned"
 
+report_only_dir="${TEST_ROOT}/results_report_only"
+rm -rf "${report_only_dir}"
+
+NXF_HOME="${TEST_ROOT}/.nextflow" \
+NXF_DISABLE_CHECK_LATEST=true \
+JAVA_CMD="${JAVA_CMD}" \
+  "${NEXTFLOW_BIN}" run "${REPO_ROOT}/main.nf" \
+    -stub-run \
+    -c "${TEST_CONFIG}" \
+    -work-dir "${WORK_DIR}/report_only" \
+    -with-report "${LOG_DIR}/report_only.report.html" \
+    -with-trace "${LOG_DIR}/report_only.trace.txt" \
+    --sample_id "TEST_UBAM" \
+    --report_only true \
+    --report_only_input_root "${TEST_ROOT}/results_ubam" \
+    --report_only_run_methylation true \
+    --t2t_ref_fasta "${T2T_FASTA}" \
+    --output_dir "${report_only_dir}"
+
 required_outputs=(
   "${TEST_ROOT}/results_ubam/build-fshd-report/TEST_UBAM/TEST_UBAM.fshd.report.html"
   "${TEST_ROOT}/results_ubam/build-fshd-report/TEST_UBAM/TEST_UBAM.fshd.report.summary.tsv"
   "${TEST_ROOT}/results_ubam/summarize-cohort/cohort.fshd.summary.html"
   "${TEST_ROOT}/results_aligned/build-fshd-report/TEST_ALIGNED/TEST_ALIGNED.fshd.report.html"
   "${TEST_ROOT}/results_aligned/summarize-cohort/cohort.fshd.summary.tsv"
+  "${TEST_ROOT}/results_report_only/build-fshd-report/TEST_UBAM/TEST_UBAM.fshd.report.html"
 )
 
 for f in "${required_outputs[@]}"; do

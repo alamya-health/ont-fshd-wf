@@ -75,6 +75,39 @@ The stub test script exercises both:
 
 - unaligned-BAM input mode
 - aligned-BAM input mode
+- report-only mode, including an optional methylation-tail rerun
+
+### Report-only rebuilds
+
+If you already have a completed published output tree and only want to rebuild the report tail, you can use:
+
+```bash
+nextflow run main.nf \
+  --sample_id SAMPLE_001 \
+  --report_only true \
+  --report_only_input_root s3://your-bucket/existing-fshd-output \
+  --t2t_ref_fasta s3://your-bucket/references/chm13v2.0.fa \
+  --output_dir s3://your-bucket/report-refresh
+```
+
+If you also want to rerun `PROFILE_FSHD_METHYLATION` from the existing subset BAMs before rebuilding the report:
+
+```bash
+nextflow run main.nf \
+  --sample_id SAMPLE_001 \
+  --report_only true \
+  --report_only_run_methylation true \
+  --report_only_input_root s3://your-bucket/existing-fshd-output \
+  --report_only_original_bam s3://your-bucket/original-donor.bam \
+  --t2t_ref_fasta s3://your-bucket/references/chm13v2.0.fa \
+  --output_dir s3://your-bucket/report-refresh
+```
+
+When `--report_only_run_methylation true` is used, the workflow will automatically try:
+
+- `merge-unaligned-bams/<sample>/<sample>.input.bam`
+
+under `report_only_input_root` if `--report_only_original_bam` is not supplied.
 
 ## Reference assets for S3
 
