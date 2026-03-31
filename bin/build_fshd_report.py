@@ -339,25 +339,35 @@ def hist_svg(values, color, label):
     bar_width = 44
     gap = 12
     width = max(460, len(xs) * (bar_width + gap) + 70)
-    height = 230
+    height = 270
     bars = []
+    y_ticks = []
+    for frac, tick in ((0.0, 0), (0.5, math.ceil(max_count / 2)), (1.0, max_count)):
+        y = 196 - frac * 132
+        y_ticks.append(f"<line x1='26' y1='{y:.1f}' x2='{width - 18}' y2='{y:.1f}' class='gridline'/>")
+        y_ticks.append(f"<text x='18' y='{y + 4:.1f}' text-anchor='end' class='axis'>{tick}</text>")
     for idx, x in enumerate(xs):
         count = counts[x]
         bar_h = int((count / max_count) * 132)
         xpos = 44 + idx * (bar_width + gap)
-        ypos = 176 - bar_h
+        ypos = 196 - bar_h
         bars.append(
             f"<rect x='{xpos}' y='{ypos}' width='{bar_width}' height='{bar_h}' rx='10' fill='{color}' />"
         )
-        bars.append(f"<text x='{xpos + bar_width / 2}' y='198' text-anchor='middle' class='axis'>{x}</text>")
+        bars.append(f"<text x='{xpos + bar_width / 2}' y='218' text-anchor='middle' class='axis'>{x}</text>")
         bars.append(
             f"<text x='{xpos + bar_width / 2}' y='{max(28, ypos - 8)}' text-anchor='middle' class='count'>{count}</text>"
         )
     return (
         f"<svg viewBox='0 0 {width} {height}' class='histogram' role='img' aria-label='{html.escape(label)}'>"
         f"<text x='28' y='26' class='title'>{html.escape(label)}</text>"
-        f"<line x1='26' y1='176' x2='{width - 18}' y2='176' stroke='rgba(58,45,36,0.22)' stroke-width='2'/>"
+        + "".join(y_ticks)
+        + f"<line x1='26' y1='196' x2='{width - 18}' y2='196' stroke='rgba(58,45,36,0.22)' stroke-width='2'/>"
         + "".join(bars)
+        + f"<text x='{width / 2:.1f}' y='{height - 12}' text-anchor='middle' class='axis'>Observed repeat-unit span on classified reads (RU)</text>"
+        + f"<text x='16' y='{height / 2:.1f}' text-anchor='middle' class='axis' transform='rotate(-90 16 {height / 2:.1f})'>Read count</text>"
+        + f"<rect x='{width - 170}' y='34' width='14' height='14' rx='4' fill='{color}'/>"
+        + f"<text x='{width - 150}' y='46' class='axis'>Histogram bars = read support</text>"
         + "</svg>"
     )
 
@@ -598,11 +608,27 @@ def repeat_pileup_svg(repeat_rows, bins_per_unit, title):
         ticks.append(f"<line x1='{x:.1f}' y1='{top - 6}' x2='{x:.1f}' y2='{height - 26}' class='gridline'/>")
         ticks.append(f"<text x='{x:.1f}' y='{height - 8}' text-anchor='middle' class='axis'>{html.escape(label)}</text>")
 
+    legend_x = left
+    legend_y = height - 34
+    legend = [
+        f"<text x='{legend_x}' y='{legend_y - 10}' class='axis'>Mean CpG methylation legend</text>",
+        f"<rect x='{legend_x}' y='{legend_y}' width='22' height='10' rx='3' fill='{color_for_pct(0)}'/>",
+        f"<text x='{legend_x + 28}' y='{legend_y + 9}' class='axis'>0%</text>",
+        f"<rect x='{legend_x + 66}' y='{legend_y}' width='22' height='10' rx='3' fill='{color_for_pct(50)}'/>",
+        f"<text x='{legend_x + 94}' y='{legend_y + 9}' class='axis'>50%</text>",
+        f"<rect x='{legend_x + 142}' y='{legend_y}' width='22' height='10' rx='3' fill='{color_for_pct(100)}'/>",
+        f"<text x='{legend_x + 170}' y='{legend_y + 9}' class='axis'>100%</text>",
+        f"<rect x='{legend_x + 238}' y='{legend_y - 1}' width='22' height='12' rx='4' fill='none' stroke='#2f7568' stroke-width='2'/>",
+        f"<text x='{legend_x + 266}' y='{legend_y + 9}' class='axis'>Distal DUX4-containing repeat</text>",
+        f"<text x='{legend_x}' y='{legend_y + 26}' class='axis'>X-axis bins tile one 3.3 kb D4Z4 repeat from proximal to distal sequence.</text>",
+    ]
+
     return (
         f"<svg viewBox='0 0 {width} {height}' class='methyl-svg' role='img' aria-label='{html.escape(title)}'>"
         f"<text x='{left}' y='22' class='title'>{html.escape(title)}</text>"
         + "".join(ticks)
         + "".join(blocks)
+        + "".join(legend)
         + "</svg>"
     )
 
@@ -612,7 +638,7 @@ def repeat_bin_strip_svg(repeat_rows, title):
         return "<p class='muted'>No repeat-bin summary was available.</p>"
 
     width = max(520, len(repeat_rows) * 18 + 80)
-    height = 180
+    height = 224
     left = 42
     top = 34
     plot_h = 82
@@ -629,6 +655,11 @@ def repeat_bin_strip_svg(repeat_rows, title):
 
     max_cov = max((row["coverage"] for row in repeat_rows), default=1.0) or 1.0
     parts = []
+    y_ticks = []
+    for frac, label in ((0.0, "0"), (0.5, f"{max_cov / 2:.0f}"), (1.0, f"{max_cov:.0f}")):
+        y = top + plot_h - frac * plot_h
+        y_ticks.append(f"<line x1='{left - 6}' y1='{y:.1f}' x2='{width - 18}' y2='{y:.1f}' class='gridline'/>")
+        y_ticks.append(f"<text x='{left - 12}' y='{y + 4:.1f}' text-anchor='end' class='axis'>{label}</text>")
     for idx, row in enumerate(repeat_rows):
         x = left + idx * 18
         bar_h = (row["coverage"] / max_cov) * plot_h if max_cov else 0.0
@@ -647,9 +678,15 @@ def repeat_bin_strip_svg(repeat_rows, title):
     return (
         f"<svg viewBox='0 0 {width} {height}' class='methyl-svg' role='img' aria-label='{html.escape(title)}'>"
         f"<text x='{left}' y='22' class='title'>{html.escape(title)}</text>"
-        f"<line x1='{left - 6}' y1='{top + plot_h:.1f}' x2='{width - 18}' y2='{top + plot_h:.1f}' class='axisline'/>"
+        + "".join(y_ticks)
+        + f"<line x1='{left - 6}' y1='{top + plot_h:.1f}' x2='{width - 18}' y2='{top + plot_h:.1f}' class='axisline'/>"
         + "".join(parts)
-        + f"<text x='{left}' y='{height - 8}' class='axis'>Rows colored by methylation, bar height reflects summed modkit coverage.</text>"
+        + f"<rect x='{left}' y='{height - 46}' width='16' height='12' rx='4' fill='{color_for_pct(80)}'/>"
+        + f"<text x='{left + 22}' y='{height - 36}' class='axis'>Bar fill = mean CpG methylation</text>"
+        + f"<rect x='{left + 200}' y='{height - 47}' width='16' height='14' rx='4' fill='none' stroke='#2f7568' stroke-width='2'/>"
+        + f"<text x='{left + 222}' y='{height - 36}' class='axis'>Outlined bar = distal repeat</text>"
+        + f"<text x='{left}' y='{height - 16}' class='axis'>X-axis orders observed repeat bins across the permissive chr4 locus. Bar height reflects summed modkit coverage.</text>"
+        + f"<text x='16' y='{top + plot_h / 2:.1f}' text-anchor='middle' class='axis' transform='rotate(-90 16 {top + plot_h / 2:.1f})'>Coverage-weighted support</text>"
         + "</svg>"
     )
 
@@ -663,7 +700,7 @@ def repeat_methyl_track_svg(repeat_rows, title):
     box_w = 34
     gap = 8
     width = max(720, left * 2 + len(repeat_rows) * (box_w + gap))
-    height = 190
+    height = 222
 
     def color_for_pct(pct):
         if pct is None:
@@ -676,7 +713,7 @@ def repeat_methyl_track_svg(repeat_rows, title):
 
     parts = [
         f"<text x='{left}' y='22' class='title'>{html.escape(title)}</text>",
-        f"<text x='{left}' y='{height - 10}' class='axis'>Each box is one repeat bin observed in at least one 4qA-supporting read. Box color is mean CpG methylation for that repeat bin.</text>",
+        f"<text x='{left}' y='{height - 18}' class='axis'>Each box is one repeat bin observed in at least one supporting read set. Box color is mean CpG methylation and the green outline marks the distal repeat.</text>",
     ]
 
     for idx, row in enumerate(repeat_rows):
@@ -691,13 +728,22 @@ def repeat_methyl_track_svg(repeat_rows, title):
             parts.append(
                 f"<rect x='{x - 3}' y='{top - 3}' width='{box_w + 6}' height='80' rx='13' fill='none' stroke='#2f7568' stroke-width='2'/>"
             )
-        parts.append(f"<text x='{x + box_w / 2}' y='{top + 24}' text-anchor='middle' class='count'>{html.escape(label)}</text>")
+        parts.append(f"<text x='{x + box_w / 2}' y='{top + 20}' text-anchor='middle' class='track-label'>{html.escape(label)}</text>")
         parts.append(
-            f"<text x='{x + box_w / 2}' y='{top + 46}' text-anchor='middle' class='axis'>{html.escape('NA' if pct is None else f'{pct:.1f}%')}</text>"
+            f"<text x='{x + box_w / 2}' y='{top + 42}' text-anchor='middle' class='axis'>{html.escape('NA' if pct is None else f'{pct:.1f}%')}</text>"
         )
         parts.append(
             f"<text x='{x + box_w / 2}' y='{top + 98}' text-anchor='middle' class='axis'>cov {coverage:.0f}</text>"
         )
+
+    parts.extend(
+        [
+            f"<rect x='{left}' y='{height - 50}' width='16' height='12' rx='4' fill='{color_for_pct(80)}'/>",
+            f"<text x='{left + 22}' y='{height - 40}' class='axis'>Color scale = mean CpG methylation</text>",
+            f"<rect x='{left + 210}' y='{height - 51}' width='16' height='14' rx='4' fill='none' stroke='#2f7568' stroke-width='2'/>",
+            f"<text x='{left + 232}' y='{height - 40}' class='axis'>Outlined box = distal repeat</text>",
+        ]
+    )
 
     return (
         f"<svg viewBox='0 0 {width} {height}' class='methyl-svg' role='img' aria-label='{html.escape(title)}'>"
@@ -771,20 +817,95 @@ def estimate_repeat_units_collective(repeat_rows, has_proximal, has_distal):
     }
 
 
+def locus_annotation_style(label):
+    clean = clean_cell(label)
+    if any(token in clean for token in ("D4Z4", "DUX4")):
+        return {
+            "fill": "rgba(38,120,108,0.18)",
+            "text": "#245d54",
+            "legend": "D4Z4 / DUX4 interval",
+        }
+    if "pLAM" in clean:
+        return {
+            "fill": "rgba(188,84,52,0.16)",
+            "text": "#8f3518",
+            "legend": "pLAM / distal haplotype marker",
+        }
+    return {
+        "fill": "rgba(181,138,43,0.18)",
+        "text": "#7d5a07",
+        "legend": "Anchor / marker interval",
+    }
+
+
+def pretty_annotation_label(label):
+    return clean_cell(label).replace("_", " ")
+
+
+def format_locus_tick(pos):
+    return f"{pos / 1_000_000:.3f} Mb"
+
+
 def methyl_profile_svg(rows, annotations, title):
     if not rows:
         return "<p class='muted'>No locus methylation pileup was available.</p>"
     start = min(row["start"] for row in rows)
     end = max(row["end"] for row in rows)
     bins = summarize_windows(rows, start, end, max(1, (end - start) // 48))
-    width = 1040
-    height = 260
-    left = 58
-    right = 28
-    top = 32
-    bottom = 44
+    width = 1280
+    right = 34
+    left = 78
+    base_top = 38
+    bottom = 92
+    plot_h = 210
+    chrom = rows[0]["chrom"]
     plot_w = width - left - right
-    plot_h = height - top - bottom
+    anno_specs = []
+    for anno in annotations:
+        if anno["chrom"] != chrom:
+            continue
+        if anno["end"] < start or anno["start"] > end:
+            continue
+        x1 = left + ((max(start, anno["start"]) - start) / max(1, end - start)) * plot_w
+        x2 = left + ((min(end, anno["end"]) - start) / max(1, end - start)) * plot_w
+        style = locus_annotation_style(anno["label"])
+        label = pretty_annotation_label(anno["label"])
+        label_width = max(72.0, min(180.0, len(label) * 5.8))
+        anno_specs.append(
+            {
+                "x1": x1,
+                "x2": x2,
+                "mid": (x1 + x2) / 2.0,
+                "label": label,
+                "label_width": label_width,
+                "fill": style["fill"],
+                "text": style["text"],
+                "legend": style["legend"],
+            }
+        )
+
+    anno_specs.sort(key=lambda item: item["x1"])
+    lane_ends = []
+    for spec in anno_specs:
+        center = min(width - right - spec["label_width"] / 2.0, max(left + spec["label_width"] / 2.0, spec["mid"]))
+        label_left = center - spec["label_width"] / 2.0
+        label_right = center + spec["label_width"] / 2.0
+        lane = None
+        for idx, last_right in enumerate(lane_ends):
+            if label_left > last_right + 10:
+                lane = idx
+                lane_ends[idx] = label_right
+                break
+        if lane is None:
+            lane = len(lane_ends)
+            lane_ends.append(label_right)
+        spec["label_x"] = center
+        spec["lane"] = lane
+
+    top = base_top + len(lane_ends) * 16
+    height = top + plot_h + bottom
+    left = 78
+    plot_w = width - left - right
     pts = []
     bars = []
     for idx, bucket in enumerate(bins):
@@ -799,36 +920,53 @@ def methyl_profile_svg(rows, annotations, title):
                 f"<rect x='{x:.1f}' y='{y:.1f}' width='{max(3.0, nxt - x)}' height='{top + plot_h - y:.1f}' fill='rgba(188,84,52,0.14)'/>"
             )
     anno_html = []
-    for anno in annotations:
-        if anno["chrom"] != rows[0]["chrom"]:
-            continue
-        if anno["end"] < start or anno["start"] > end:
-            continue
-        x1 = left + ((max(start, anno["start"]) - start) / max(1, end - start)) * plot_w
-        x2 = left + ((min(end, anno["end"]) - start) / max(1, end - start)) * plot_w
-        label = anno["label"]
-        tone = "rgba(38,120,108,0.16)" if "D4Z4" in label or "DUX4" in label else "rgba(181,138,43,0.18)"
+    legend_map = {}
+    for spec in anno_specs:
         anno_html.append(
-            f"<rect x='{x1:.1f}' y='{top - 4}' width='{max(2.0, x2 - x1):.1f}' height='{plot_h + 8}' fill='{tone}'/>"
+            f"<rect x='{spec['x1']:.1f}' y='{top - 4}' width='{max(2.0, spec['x2'] - spec['x1']):.1f}' height='{plot_h + 8}' fill='{spec['fill']}'/>"
+        )
+        label_y = base_top + spec["lane"] * 16
+        anno_html.append(
+            f"<line x1='{spec['mid']:.1f}' y1='{label_y + 3:.1f}' x2='{spec['mid']:.1f}' y2='{top - 6:.1f}' stroke='{spec['text']}' stroke-width='1.2' stroke-dasharray='2 2'/>"
         )
         anno_html.append(
-            f"<text x='{x1 + 4:.1f}' y='{top + 12}' class='anno'>{html.escape(label)}</text>"
+            f"<text x='{spec['label_x']:.1f}' y='{label_y:.1f}' text-anchor='middle' class='anno'>{html.escape(spec['label'])}</text>"
         )
+        legend_map[spec["legend"]] = spec["fill"]
     y_ticks = []
     for pct in (0, 25, 50, 75, 100):
         y = top + plot_h - (pct / 100.0) * plot_h
         y_ticks.append(f"<line x1='{left}' y1='{y:.1f}' x2='{width - right}' y2='{y:.1f}' class='gridline'/>")
         y_ticks.append(f"<text x='{left - 10}' y='{y + 4:.1f}' text-anchor='end' class='axis'>{pct}%</text>")
+    x_ticks = []
+    for frac, pos in ((0.0, start), (0.25, start + (end - start) * 0.25), (0.5, start + (end - start) * 0.5), (0.75, start + (end - start) * 0.75), (1.0, end)):
+        x = left + frac * plot_w
+        x_ticks.append(f"<line x1='{x:.1f}' y1='{top + plot_h:.1f}' x2='{x:.1f}' y2='{top + plot_h + 6:.1f}' class='axisline'/>")
+        x_ticks.append(f"<text x='{x:.1f}' y='{top + plot_h + 20:.1f}' text-anchor='middle' class='axis'>{html.escape(format_locus_tick(pos))}</text>")
+
+    legend_parts = [
+        f"<line x1='{left}' y1='{height - 54}' x2='{left + 24}' y2='{height - 54}' stroke='#bc5434' stroke-width='3'/>",
+        f"<text x='{left + 32}' y='{height - 50}' class='axis'>Mean CpG methylation profile</text>",
+        f"<rect x='{left}' y='{height - 38}' width='16' height='12' rx='4' fill='rgba(188,84,52,0.14)'/>",
+        f"<text x='{left + 24}' y='{height - 28}' class='axis'>Coverage-weighted methylation area</text>",
+    ]
+    legend_x = left + 280
+    for idx, (legend_label, fill) in enumerate(sorted(legend_map.items())):
+        legend_parts.append(f"<rect x='{legend_x}' y='{height - 38}' width='16' height='12' rx='4' fill='{fill}'/>")
+        legend_parts.append(f"<text x='{legend_x + 24}' y='{height - 28}' class='axis'>{html.escape(legend_label)}</text>")
+        legend_x += 230
     return (
         f"<svg viewBox='0 0 {width} {height}' class='methyl-svg' role='img' aria-label='{html.escape(title)}'>"
         f"<text x='{left}' y='22' class='title'>{html.escape(title)}</text>"
         + "".join(anno_html)
         + "".join(y_ticks)
+        + "".join(x_ticks)
         + "".join(bars)
         + f"<polyline fill='none' stroke='#bc5434' stroke-width='3' points='{' '.join(pts)}'/>"
         + f"<line x1='{left}' y1='{top + plot_h:.1f}' x2='{width - right}' y2='{top + plot_h:.1f}' class='axisline'/>"
-        + f"<text x='{left}' y='{height - 10}' class='axis'>{rows[0]['chrom']}:{start:,}</text>"
-        + f"<text x='{width - right}' y='{height - 10}' text-anchor='end' class='axis'>{rows[0]['chrom']}:{end:,}</text>"
+        + f"<text x='{width / 2:.1f}' y='{height - 8}' text-anchor='middle' class='axis'>Locus coordinate ({html.escape(chrom)}, T2T-CHM13)</text>"
+        + f"<text x='18' y='{top + plot_h / 2:.1f}' text-anchor='middle' class='axis' transform='rotate(-90 18 {top + plot_h / 2:.1f})'>Mean CpG methylation</text>"
+        + "".join(legend_parts)
         + "</svg>"
     )
 
@@ -961,8 +1099,14 @@ def main() -> int:
             flagstat_headline = clean_cell(fh.readline())
 
     coverage_rows = coverage_rows_from_tsv(coverage_tsv)
-    coverage_focus = [
+    coverage_focus_chr4 = [
         row for row in coverage_rows if row.get("#chrom") == "chr4" and row.get("label") in ("D4Z4_4q35", "DUX4_gene_body_chr4", "pLAM_4qA", "DUX4_end_chr4")
+    ]
+    coverage_focus_chr10 = [
+        row
+        for row in coverage_rows
+        if row.get("#chrom") == "chr10"
+        and row.get("label") in ("DUX4_homologue_chr10", "CTRL_D4Z4_chr10", "CLUHP4_201_exon1_chr10", "D4F104S1_10q", "pLAM_10qA")
     ]
 
     hap_rows = read_tsv(hap_tsv)
@@ -1133,7 +1277,7 @@ def main() -> int:
         "compact",
     )
 
-    coverage_table = table_html(
+    coverage_table_chr4 = table_html(
         ["Label", "Reads", "Covered bp", "Breadth", "Mean depth"],
         [
             [
@@ -1143,7 +1287,22 @@ def main() -> int:
                 html.escape(row.get("coverage", "")),
                 html.escape(row.get("meandepth", "")),
             ]
-            for row in coverage_focus
+            for row in coverage_focus_chr4
+        ],
+        "compact",
+    )
+
+    coverage_table_chr10 = table_html(
+        ["Label", "Reads", "Covered bp", "Breadth", "Mean depth"],
+        [
+            [
+                html.escape(row.get("label", "")),
+                html.escape(row.get("numreads", "")),
+                html.escape(row.get("covbases", "")),
+                html.escape(row.get("coverage", "")),
+                html.escape(row.get("meandepth", "")),
+            ]
+            for row in coverage_focus_chr10
         ],
         "compact",
     )
@@ -1307,6 +1466,7 @@ def main() -> int:
     .title {{ font-size: 16px; fill: #45362a; font-weight: 700; }}
     .axis {{ font-size: 11px; fill: #6e635b; }}
     .count {{ font-size: 12px; fill: #45362a; }}
+    .track-label {{ font-size: 10px; fill: #45362a; font-weight: 700; }}
     .gridline {{ stroke: rgba(69,54,42,0.10); stroke-width: 1; }}
     .axisline {{ stroke: rgba(69,54,42,0.26); stroke-width: 1.5; }}
     .anno {{ font-size: 10px; fill: #355f57; }}
@@ -1572,15 +1732,25 @@ def main() -> int:
       <h2>4q and 10q Locus Coverage</h2>
       <div class="dual-grid">
         <div>
-          {methyl_profile_svg(methyl_records, locus_annotations, "4qA-supporting methylation along the full observed chr4 locus")}
-          <p class="footnote">This chr4 panel is retained as context for where the permissive 4qA-supporting reads tiled across the locus, but the primary methylation interpretation should come from the folded repeat plot above.</p>
+          {methyl_profile_svg(methyl_records_chr4_all or methyl_records, locus_annotations, "chr4 D4Z4 / DUX4 locus methylation")}
+          <p class="footnote">The chr4 panel summarizes methylation across the permissive D4Z4 / DUX4 locus context. Shaded intervals correspond to annotated D4Z4, DUX4, pLAM, and anchor-marker regions from the locus BED.</p>
         </div>
         <div>
-          <h3>Relevant locus intervals</h3>
-          {coverage_table}
-          <p class="footnote">An IGV-style viewer is the next natural layer here: chr4 permissive locus, chr10 homologue locus, and a single-repeat motif window with the methylation pileup painted on top.</p>
+          {methyl_profile_svg(methyl_records_chr10_all, locus_annotations, "chr10 D4Z4 homologue locus methylation")}
+          <p class="footnote">The chr10 panel uses the broader `D4Z4_chr10_only` subset when available. Older runs that only profiled 4qA-supporting reads will show this as unavailable.</p>
         </div>
       </div>
+      <div class="dual-grid" style="margin-top: 18px;">
+        <div>
+          <h3>chr4 annotated interval summary</h3>
+          {coverage_table_chr4}
+        </div>
+        <div>
+          <h3>chr10 annotated interval summary</h3>
+          {coverage_table_chr10}
+        </div>
+      </div>
+      <p class="footnote">An IGV-style viewer is the next natural layer here: chr4 permissive locus, chr10 homologue locus, and a single-repeat motif window with the methylation pileup painted on top.</p>
     </section>
 
     <section class="section">
